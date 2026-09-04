@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import fitz, google.generativeai as genai
-import json, datetime, html, re, time, math, os
+import json, datetime, html, re, time, math, os, urllib.parse
 from pathlib import Path
 
 st.set_page_config(page_title="NeuroStudy", page_icon="🧠", layout="wide",
@@ -1729,6 +1729,32 @@ def save_discussion(mat_name, messages):
     d_path = get_user_root() / "discussions" / f"{mat_name}.json"
     d_path.write_text(json.dumps(messages, ensure_ascii=False, indent=2))
 
+def get_current_indonesia_time():
+    """Mengembalikan hari, tanggal, bulan, tahun, dan jam dalam format standar Indonesia."""
+    HARI_INA = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+    BULAN_INA = [
+        "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ]
+    now_live = datetime.datetime.now()
+    hari = HARI_INA[now_live.weekday()]
+    tgl = now_live.day
+    bulan = BULAN_INA[now_live.month]
+    tahun = now_live.year
+    jam = now_live.strftime("%H:%M") + " WIB"
+    full_str = f"{hari}, {tgl} {bulan} {tahun} • {jam}"
+    short_str = f"{hari}, {tgl} {bulan[:3]} {tahun} • {jam}"
+    return {
+        "datetime": now_live,
+        "hari": hari,
+        "tanggal": tgl,
+        "bulan": bulan,
+        "tahun": tahun,
+        "jam": jam,
+        "full_str": full_str,
+        "short_str": short_str
+    }
+
 def build_gcal_url(title, dt, details=""):
     import urllib.parse
     start_str = dt.strftime("%Y%m%dT090000Z")
@@ -2914,7 +2940,7 @@ is_owner = bool(
 )
 st.session_state.is_owner = is_owner
 
-c_brand, c_user, c_switch, c_theme, c_logout = st.columns([2.8, 3.2, 1.4, 1.4, 1.1], vertical_alignment="center")
+c_brand, c_gtime, c_user, c_switch, c_theme, c_logout = st.columns([2.2, 2.8, 2.3, 1.2, 1.2, 0.9], vertical_alignment="center")
 
 with c_brand:
     st.markdown('''
@@ -2925,6 +2951,46 @@ with c_brand:
     <div style="font-size:0.68rem;color:#818cf8;font-weight:800;letter-spacing:0.4px;margin-top:2px;">CLINICAL NEUROSCIENCE LEARNING PLATFORM</div>
   </div>
 </div>
+''', unsafe_allow_html=True)
+
+with c_gtime:
+    t_live = get_current_indonesia_time()
+    with st.popover(f"🕒 {t_live['short_str']}", use_container_width=True, help="Waktu Sistem & Hub Integrasi Google Workspace"):
+        st.markdown("#### 🌐 Google Medical Workspace")
+        st.markdown(f'''
+<div style="background:linear-gradient(135deg, rgba(66,133,244,0.12), rgba(52,168,83,0.12)); border:1px solid rgba(66,133,244,0.3); border-radius:12px; padding:12px 14px; margin-bottom:12px;">
+  <div style="font-size:0.7rem; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">WAKTU & KALENDER SISTEM TERINTEGRASI</div>
+  <div style="font-size:1.05rem; font-weight:900; color:#38bdf8; margin:4px 0;">{t_live['hari']}, {t_live['tanggal']} {t_live['bulan']} {t_live['tahun']}</div>
+  <div style="font-size:0.9rem; font-weight:800; color:#10b981; display:flex; align-items:center; gap:6px;">
+    <span>⏰ {t_live['jam']}</span>
+    <span style="font-size:0.65rem; background:rgba(16,185,129,0.2); padding:2px 6px; border-radius:6px; color:#34d399; font-weight:700;">TERKONEKSI GOOGLE</span>
+  </div>
+</div>
+''', unsafe_allow_html=True)
+        st.caption("Akses cepat ekosistem Google untuk efisiensi rotasi klinik & studi kedokteran:")
+        
+        c_gw1, c_gw2 = st.columns(2)
+        with c_gw1:
+            st.markdown('''
+<a href="https://calendar.google.com" target="_blank" style="text-decoration:none; display:block; background:rgba(66,133,244,0.12); border:1px solid rgba(66,133,244,0.35); padding:10px 12px; border-radius:10px; margin-bottom:8px;">
+  <div style="font-size:0.85rem; font-weight:800; color:#60a5fa;">📅 Google Calendar</div>
+  <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">Cek jadwal modul & review</div>
+</a>
+<a href="https://meet.google.com/new" target="_blank" style="text-decoration:none; display:block; background:rgba(52,168,83,0.12); border:1px solid rgba(52,168,83,0.35); padding:10px 12px; border-radius:10px; margin-bottom:8px;">
+  <div style="font-size:0.85rem; font-weight:800; color:#34d399;">🎥 Google Meet</div>
+  <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">Mulai diskusi kasus PBL</div>
+</a>
+''', unsafe_allow_html=True)
+        with c_gw2:
+            st.markdown('''
+<a href="https://scholar.google.com" target="_blank" style="text-decoration:none; display:block; background:rgba(251,188,5,0.12); border:1px solid rgba(251,188,5,0.35); padding:10px 12px; border-radius:10px; margin-bottom:8px;">
+  <div style="font-size:0.85rem; font-weight:800; color:#fbbf24;">🔬 Google Scholar</div>
+  <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">Riset jurnal EBM & konsensus</div>
+</a>
+<a href="https://drive.google.com" target="_blank" style="text-decoration:none; display:block; background:rgba(234,67,53,0.12); border:1px solid rgba(234,67,53,0.35); padding:10px 12px; border-radius:10px; margin-bottom:8px;">
+  <div style="font-size:0.85rem; font-weight:800; color:#f87171;">📁 Google Drive</div>
+  <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">Arsip 208 slide kuliah cloud</div>
+</a>
 ''', unsafe_allow_html=True)
 
 with c_user:
@@ -3671,6 +3737,23 @@ def render_sub_spaced_repetition():
     st.markdown('<div style="font-size:1.5rem;font-weight:800;color:#f8fafc;margin-bottom:4px;letter-spacing:-0.5px;">📅 Jadwal Belajar & Google Calendar</div>', unsafe_allow_html=True)
     st.markdown('<p style="color:#94a3b8;font-size:.85rem;margin-bottom:20px;">Spaced Repetition berbasis algoritma SM-2 & konsolidasi tidur — terintegrasi dengan Google Calendar dan kalender digital Anda.</p>', unsafe_allow_html=True)
 
+    t_info = get_current_indonesia_time()
+    st.markdown(f'''
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;background:rgba(30,41,59,0.7);border:1px solid rgba(66,133,244,0.3);padding:12px 18px;border-radius:12px;margin-bottom:18px;">
+  <div>
+    <div style="font-size:0.72rem;color:#818cf8;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;">WAKTU SISTEM TERINTEGRASI GOOGLE CALENDAR</div>
+    <div style="font-size:1.05rem;font-weight:900;color:#ffffff;margin-top:2px;">
+      🗓️ {t_info["hari"]}, {t_info["tanggal"]} {t_info["bulan"]} {t_info["tahun"]} <span style="color:#38bdf8;font-weight:700;">• {t_info["jam"]}</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+    <a href="https://calendar.google.com" target="_blank" style="text-decoration:none;background:linear-gradient(135deg, #4285F4 0%, #1d4ed8 100%);color:#ffffff;font-size:0.78rem;font-weight:700;padding:6px 14px;border-radius:8px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(66,133,244,0.3);">
+      <span>🌐 Buka Google Calendar Web</span> ↗
+    </a>
+  </div>
+</div>
+''', unsafe_allow_html=True)
+
     if not mats:
         st.markdown('<div class="card"><div class="cs" style="text-align:center;">Belum ada materi.</div></div>', unsafe_allow_html=True)
     else:
@@ -4077,6 +4160,36 @@ Seluruh materi, penalaran klinis, dan algoritma sintesis NeuroStudy berakar seca
         raw_text = load_mats()[sel].get("text", "")
         text = clean_academic_text(raw_text)
         mat_info = load_mats()[sel]
+
+        # ── GOOGLE MEDICAL WORKSPACE TOOLKIT ──
+        next_study_date = datetime.datetime.now() + datetime.timedelta(days=1)
+        gcal_url = build_gcal_url(
+            title=f"🧠 Review: {sel}",
+            dt=next_study_date,
+            details=f"Sesi belajar modul kedokteran: {sel}\nAplikasi: NeuroStudy Clinical Platform\nTarget: Active Recall & Latihan Klinis."
+        )
+        scholar_query = urllib.parse.quote(f"{sel} medicine clinical review")
+        scholar_url = f"https://scholar.google.com/scholar?q={scholar_query}"
+        
+        st.markdown(f'''
+<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 14px;margin:8px 0 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span style="font-size:0.72rem;font-weight:800;color:#94a3b8;letter-spacing:0.4px;">GOOGLE MEDICAL SUITE:</span>
+    <span style="font-size:0.78rem;font-weight:800;color:#38bdf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;">{sel}</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <a href="{gcal_url}" target="_blank" style="text-decoration:none;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.4);color:#93c5fd;font-size:0.74rem;font-weight:700;padding:4px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
+      <span>📅 + Google Calendar</span>
+    </a>
+    <a href="{scholar_url}" target="_blank" style="text-decoration:none;background:rgba(251,188,5,0.15);border:1px solid rgba(251,188,5,0.4);color:#fde047;font-size:0.74rem;font-weight:700;padding:4px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
+      <span>🔬 Google Scholar (EBM)</span>
+    </a>
+    <a href="https://meet.google.com/new" target="_blank" style="text-decoration:none;background:rgba(52,168,83,0.15);border:1px solid rgba(52,168,83,0.4);color:#86efac;font-size:0.74rem;font-weight:700;padding:4px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
+      <span>🎥 Google Meet Diskusi</span>
+    </a>
+  </div>
+</div>
+''', unsafe_allow_html=True)
 
         # ── CEK MODE DARURAT UJIAN (FAST TRACK H-1) ──
         if st.session_state.get("study_mode") == "⚡ Mode Darurat H-1 Ujian":
