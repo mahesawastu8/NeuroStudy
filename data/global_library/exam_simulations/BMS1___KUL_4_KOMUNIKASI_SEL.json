@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "level": "Level 1 (C1-C2: Fondasi & Definisi)",
+    "question": "Seorang peneliti sedang mengamati kultur sel neuroendokrin yang mensekresikan suatu molekul sinyal ke dalam cairan interstitial. Molekul sinyal ini berdifusi dan berikatan secara eksklusif pada reseptor di permukaan sel tetangga yang berada di sekitar area tersebut tanpa masuk ke dalam sirkulasi sistemik yang luas. Apakah jenis komunikasi sel yang sedang diamati?",
+    "options": [
+      "A. Komunikasi Endokrin",
+      "B. Komunikasi Parakrin",
+      "C. Komunikasi Autokrin",
+      "D. Komunikasi Sinaptik",
+      "E. Komunikasi Juxtakrin"
+    ],
+    "correct_letter": "B",
+    "rationale": "Komunikasi parakrin melibatkan pelepasan molekul sinyal (mediator lokal) oleh suatu sel yang berdifusi melalui cairan ekstraseluler lokal untuk mempengaruhi sel target yang berada di sekitar atau berdekatan. Ini berbeda dengan endokrin (melalui aliran darah jarak jauh), autokrin (sel mempengaruhi dirinya sendiri), dan sinaptik (neurotransmiter melalui celah sinaps sempit).",
+    "distractor_analysis": "A. Endokrin menggunakan pembuluh darah untuk jarak jauh. C. Autokrin menargetkan reseptor pada sel yang memproduksinya sendiri. D. Sinaptik terjadi pada celah spesifik ujung akson saraf. E. Juxtakrin memerlukan kontak langsung antar membran sel."
+  },
+  {
+    "id": 2,
+    "level": "Level 1 (C1-C2: Fondasi & Definisi)",
+    "question": "Manakah dari pasangan jalur transduksi sinyal dan second messenger intraselulernya yang dihubungkan secara BENAR pada aktivasi G-Protein Coupled Receptor (GPCR) tipe Gq?",
+    "options": [
+      "A. Gq - Aktivasi Adenilat Siklase - Peningkatan cAMP",
+      "B. Gq - Penghambatan Adenilat Siklase - Penurunan cAMP",
+      "C. Gq - Aktivasi Fosfolipase C (PLC) - Peningkatan IP3 dan DAG",
+      "D. Gq - Aktivasi Fosfolipase A2 - Peningkatan Asam Arakidonat",
+      "E. Gq - Aktivasi Guandil Siklase - Peningkatan cGMP"
+    ],
+    "correct_letter": "C",
+    "rationale": "GPCR tipe Gq mengaktifkan enzim Fosfolipase C (PLC). PLC memecah fosfatidilinositol 4,5-bisfosfat (PIP2) menjadi dua second messenger penting, yaitu Inositol 1,4,5-trifosfat (IP3) yang memicu pelepasan Ca2+ dari retikulum endoplasma, dan Diasilgliserol (DAG) yang mengaktivasi Protein Kinase C (PKC).",
+    "distractor_analysis": "A. Aktivasi Adenilat Siklase dan peningkatan cAMP merupakan ciri khas Gs. B. Penghambatan Adenilat Siklase dan penurunan cAMP merupakan ciri khas Gi. D & E melibatkan jalur enzim lain yang tidak diaktifkan langsung oleh Gq standar."
+  },
+  {
+    "id": 3,
+    "level": "Level 2 (C3-C4: Analisis Mekanisme, Kurva, Jalur Molekuler)",
+    "question": "Seorang ahli farmakologi sedang meneliti mekanisme kerja obat antihipertensi baru. Obat tersebut diketahui bekerja dengan cara menghambat enzim fosfodiesterase (PDE) spesifik di dalam sel otot polos pembuluh darah. Berdasarkan jalur kaskade Gs-protein, apa akibat langsung dari penghambatan enzim fosfodiesterase ini terhadap konsentrasi second messenger intraseluler?",
+    "options": [
+      "A. Penurunan degradasi cAMP sehingga kadar cAMP intraseluler meningkat",
+      "B. Peningkatan degradasi cAMP sehingga kadar cAMP intraseluler menurun",
+      "C. Penurunan sintesis IP3 dari molekul prekursor PIP2",
+      "D. Peningkatan pengikatan GTP pada subunit alpha Gs",
+      "E. Penghambatan total aktivitas katalitik Protein Kinase A (PKA)"
+    ],
+    "correct_letter": "A",
+    "rationale": "Enzim fosfodiesterase (PDE) bertanggung jawab untuk mendegradasi siklik AMP (cAMP) menjadi AMP biasa. Jika PDE dihambat oleh obat, cAMP tidak dapat dipecah, sehingga akumulasi cAMP meningkat di dalam sel, memicu aktivasi PKA lebih lanjut yang mengarah pada relaksasi otot polos vaskular.",
+    "distractor_analysis": "B. Penghambatan justru menurunkan degradasi, bukan meningkatkan. C. IP3 terkait jalur Gq/PLC, bukan target langsung PDE yang memetabolisme nukleotida siklik. D. Aktivasi pengikatan GTP adalah fungsi reseptor GPCR upstream. E. Peningkatan cAMP justru mengaktivasi PKA, bukan menghambatnya."
+  },
+  {
+    "id": 4,
+    "level": "Level 2 (C3-C4: Analisis Mekanisme, Kurva, Jalur Molekuler)",
+    "question": "Hormon steroid kortisol bekerja melalui mekanisme reseptor intraseluler (nuklear). Berbeda dengan peptida hormon yang berikatan di membran plasma, kortisol dapat dengan mudah menembus membran sel. Apa langkah molekuler krusial yang terjadi segera setelah kortisol berikatan dengan reseptornya di sitoplasma?",
+    "options": [
+      "A. Aktivasi kaskade fosforilasi tirosin kinase dan dimerisasi reseptor",
+      "B. Disosiasi protein kejut panas (heat shock proteins / HSP) dan dimerisasi reseptor",
+      "C. Aktivasi langsung protein G heterotrimerik subunit alpha",
+      "D. Pembentukan second messenger DAG dan pembukaan gerbang ion Ca2+",
+      "E. Pembelahan enzimatik langsung pada domain transmembran reseptor"
+    ],
+    "correct_letter": "B",
+    "rationale": "Reseptor hormon steroid intraseluler inaktif di sitoplasma berikatan dengan protein pendamping (heat shock proteins / HSP). Ketika hormon steroid (seperti kortisol) masuk dan berikatan, terjadi konformasi perubahan struktur yang menyebabkan disosiasi HSP, diikuti oleh dimerisasi reseptor dan translokasi ke nukleus untuk berikatan dengan Hormone Response Elements (HRE) pada DNA.",
+    "distractor_analysis": "A. Dimerisasi dan fosforilasi tirosin kinase adalah karakteristik Reseptor Tirosin Kinase (RTK). C. Protein G heterotrimerik adalah ciri GPCR membran. D & E merupakan mekanisme pensinyalan membran sel, bukan reseptor intraseluler steroid."
+  },
+  {
+    "id": 5,
+    "level": "Level 3 (C5-C6: Kasus Klinis / Vignette Pasien Nyata)",
+    "question": "Seorang wanita 45 tahun datang dengan keluhan benjolan di leher dan palpitasi jantung. Hasil pemeriksaan histopatologi menunjukkan adanya mutasi pengaktifan (activating mutation) pada Reseptor Tirosin Kinase (RTK) tertentu yang memicu proliferasi sel tiroid yang tak terkendali melalui jalur MAPK/ERK dan PI3K-Akt. Manakah urutan kaskade transduksi sinyal yang PALING TEPAT mewakili jalur RTK dari membran hingga aktivasi efektor intraselulernya?",
+    "options": [
+      "A. Ligand binding -> Dimerisasi RTK -> Autofosforilasi tirosin -> Perekrutan adaptor Grb2/Sos -> Aktivasi Ras -> Kaskade Raf-MEK-ERK",
+      "B. Ligand binding -> Disosiasi HSP -> Transisi nukleus -> Aktivasi transkripsi gen langsung",
+      "C. Ligand binding -> Aktivasi Gq -> PLC -> IP3/DAG -> Peningkatan Ca2+ intraseluler",
+      "D. Ligand binding -> Aktivasi Adenilat Siklase -> Penurunan cAMP -> Inaktivasi PKA",
+      "E. Ligand binding -> Pembukaan kanal ion ligand-gated -> Depolarisasi membran kilat"
+    ],
+    "correct_letter": "A",
+    "rationale": "Mekanisme klasik Reseptor Tirosin Kinase (RTK) dimulai dengan pengikatan ligan, induksi dimerisasi reseptor, autofosforilasi residu tirosin pada domain intraselulernya, perekrutan protein adaptor seperti Grb2 dan faktor penukar nukleotida guanin (Sos), yang kemudian mengaktivasi protein kecil G (Ras), memicu kaskade kinase berantai Raf -> MEK -> ERK.",
+    "distractor_analysis": "B. Mekanisme reseptor steroid. C. Mekanisme GPCR jalur Gq. D. Mekanisme GPCR jalur Gi. E. Mekanisme kanal ion ionotropik."
+  },
+  {
+    "id": 6,
+    "level": "Level 3 (C5-C6: Kasus Klinis / Vignette Pasien Nyata)",
+    "question": "Seorang anak laki-laki berusia 8 tahun dibawa ke IGD karena mengalami serangan asma berat. Dokter memberikan terapi nebulisasi agonis beta-2 adrenergik (salbutamol). Salbutamol bekerja dengan mengikat reseptor beta-2 pada otot polos bronkus yang merupakan GPCR tipe Gs. Berdasarkan pemahaman transduksi sinyal seluler, jelaskan rangkaian peristiwa biokimia intraseluler yang menyebabkan terjadinya bronkodilatasi pada pasien ini!",
+    "options": [
+      "A. Stimulasi Gs -> Aktivasi Adenilat Siklase -> Peningkatan cAMP -> Aktivasi PKA -> Penurunan ion Ca2+ bebas di sitosol -> Relaksasi otot polos",
+      "B. Penghambatan Gi -> Penurunan Adenilat Siklase -> Penurunan cAMP -> Peningkatan kalsium intraseluler -> Kontraksi otot polos",
+      "C. Aktivasi Gq -> Aktivasi PLC -> Produksi IP3 -> Pelepasan kalsium dari retikulum endoplasma -> Kontraksi bronkus",
+      "D. Pengikatan RTK -> Aktivasi jalur PI3K-Akt -> Fosforilasi NOS -> Penutupan kanal kalsium",
+      "E. Aktivasi reseptor intraseluler -> Transkripsi gen beta-2 -> Penurunan sensitivitas kalsium"
+    ],
+    "correct_letter": "A",
+    "rationale": "Salbutamol adalah agonis beta-2 (GPCR Gs). Pengikatannya mengaktifkan protein Gs, yang menstimulasi enzim Adenilat Siklase mengubah ATP menjadi cAMP. Peningkatan cAMP mengaktifkan Protein Kinase A (PKA). PKA selanjutnya menghambat MLCK (myosin light-chain kinase) dan memfasilitasi pengeluaran ion Ca2+ keluar sel/retikulum endoplasma, menurunkan kadar Ca2+ bebas sitosol yang esensial untuk kontraksi otot polos, sehingga terjadi bronkodilatasi.",
+    "distractor_analysis": "B. Jalur Gi justru menurunkan cAMP, berlawanan dengan efek beta-2. C. Jalur Gq/IP3 memicu peningkatan kalsium yang menyebabkan kontriksi (bronkokonstriksi). D & E bukan jalur farmakodinamik utama agonis beta-2 adrenergik."
+  }
+]

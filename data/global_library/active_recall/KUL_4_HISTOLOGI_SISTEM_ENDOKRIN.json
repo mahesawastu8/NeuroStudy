@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "question": "Mengapa morfologi sel folikuler pada kelenjar tiroid dapat berubah dari pipih menjadi kuboid atau silindris tinggi saat kelenjar tersebut terstimulasi secara aktif?",
+    "key_concept": "Hubungan antara aktivitas sintesis hormon tiroid dengan perubahan tinggi sel epitel folikuler dan akumulasi koloid.",
+    "hint": "Pikirkan tentang kebutuhan produksi dan penyimpanan protein/hormon di dalam kompartemen seluler versus lumen folikel."
+  },
+  {
+    "id": 2,
+    "question": "Bagaimana struktur mikroskopis *Herring bodies* pada pars nervosa neurohipofisis mencerminkan fungsi penyimpanan dan pelepasan hormon neurosekretori?",
+    "key_concept": "Peran akson tak bermielin dari hipotalamus dan akumulasi vesikel neurosekretori (Oksitosin/ADH) pada ujung saraf.",
+    "hint": "Hubungkan penampakan histologis berupa dilatasi akson dengan tempat sintesis hormon aslinya di otak."
+  },
+  {
+    "id": 3,
+    "question": "Mengapa sel kromafin di medula adrenal secara histologis dan embriologis dapat dianggap sebagai modifikasi dari ganglion simpatis pascaganglion?",
+    "key_concept": "Asal usul embriologi neural crest dan fungsi sekretori sel kromafin yang melepaskan katekolamin langsung ke pembuluh darah.",
+    "hint": "Perhatikan persarafan simpatis preganglionik yang langsung menuju ke sel-sel di medula adrenal."
+  }
+]

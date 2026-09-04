@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "level": "Level 1 (C1-C2: Fondasi & Definisi)",
+    "question": "Seorang peneliti farmakologi molekuler menguji molekul obat baru (Obat X) pada sistem reseptor terpasang protein G (GPCR) yang memiliki aktivitas konstitutif basal (basal intrinsic activity) tanpa hadirnya ligan endogen. Dalam eksperimen, Obat X berikatan dengan situs aktif (orthosteric site) yang sama dengan ligan endogen, namun justru menurunkan aktivitas basal reseptor tersebut hingga di bawah level kontrol (inaktivasi total). Manakah istilah yang paling tepat untuk mendeskripsikan profil farmakodinamik Obat X?",
+    "options": [
+      "A. Agonis Penuh (Full Agonist)",
+      "B. Agonis Parsial (Partial Agonist)",
+      "C. Antagonis Kompetitif Reversibel",
+      "D. Agonis Terbalik (Inverse Agonist)",
+      "E. Antagonis Alosterik Non-kompetitif"
+    ],
+    "correct_letter": "D",
+    "rationale": "Agonis terbalik (Inverse Agonist) adalah molekul yang berikatan dengan situs reseptor yang sama dengan agonis (orthosteric), tetapi secara selektif menstabilkan bentuk reseptor yang tidak aktif (R_inact). Akibatnya, obat ini menurunkan aktivitas intrinsik basal (konstitutif) reseptor hingga di bawah level baseline. Contoh klasik agonis terbalik meliputi beta-blokers tertentu, antihistamin H1, dan agen benzodiazepin inverse agonist (seperti FG-7142).",
+    "distractor_analysis": "Opsi A salah karena Full Agonist menstabilkan bentuk aktif reseptor (R_act) dan meningkatkan respons di atas basal. Opsi B salah karena Partial Agonist meningkatkan respons basal namun tidak mencapai 100% respons maksimal. Opsi C salah karena Antagonis Kompetitif Reversibel berikatan pada situs aktif tanpa mengubah aktivitas basal (efikasi intrinsik = 0), ia hanya menghalangi ikatan agonis. Opsi E salah karena Antagonis Alosterik berikatan pada situs alosterik (bukan orthosteric)."
+  },
+  {
+    "id": 2,
+    "level": "Level 1 (C1-C2: Fondasi & Definisi)",
+    "question": "Dalam studi respons obat-reseptor pada miokardium, fenomena reseptor cadangan (spare receptors) sering dijumpai pada jalur persarafan simpatis. Pernyataan manakah yang paling akurat secara sistematis dalam menggambarkan konsep 'reseptor cadangan' tersebut?",
+    "options": [
+      "A. Reseptor cadangan adalah populasi reseptor non-fungsional yang tersimpan di dalam vesikel sitoplasma sel.",
+      "B. Reseptor cadangan terjadi ketika konsentrasi obat yang diperlukan untuk mencapai 50% respons maksimal (EC50) lebih kecil daripada konstanta disosiasi (Kd).",
+      "C. Reseptor cadangan menandakan bahwa obat memiliki afinitas yang sangat rendah sehingga membutuhkan 100% okupansi reseptor untuk efek maksimal.",
+      "D. Reseptor cadangan menyebabkan nilai Emax tidak pernah dapat dicapai meskipun konsentrasi obat ditingkatkan.",
+      "E. Reseptor cadangan didefinisikan secara sistemis jika nilai EC50 persis sama dengan nilai Kd dari interaksi obat-reseptor."
+    ],
+    "correct_letter": "B",
+    "rationale": "Sistem reseptor dikatakan memiliki reseptor cadangan (spare receptors) jika respons maksimal biologis (Emax) dapat dicapai pada okupansi reseptor yang kurang dari 100%. Secara kuantitatif farmakodinamik, kondisi ini ditunjukkan ketika konsentrasi obat yang menghasilkan 50% respons maksimal (EC50) lebih kecil daripada konsentrasi obat yang mengikat 50% total reseptor (Kd), yaitu EC50 < Kd. Fenomena ini terjadi akibat adanya amplifikasi sinyal molekuler intraseluler (second messenger downstream, seperti cAMP atau IP3/DAG).",
+    "distractor_analysis": "Opsi A salah karena reseptor cadangan berada di membran sel dan fully functional, bukan cadangan fisik di dalam sitoplasma. Opsi C salah karena spare receptors justru memungkinkan Emax dicapai tanpa 100% okupansi (afinitas/kepekaan jaringan tinggi). Opsi D salah karena Emax tetap dapat dicapai 100%. Opsi E salah karena jika EC50 = Kd, maka tidak terdapat spare receptors pada sistem tersebut."
+  },
+  {
+    "id": 3,
+    "level": "Level 2 (C3-C4: Analisis Mekanisme & Kurva)",
+    "question": "Suatu eksperimen laboratorium mengukur respons kontraksi otot polos vaskular terhadap pemberian agonis Norepinefrin (Obat A). Penambahan Senyawa X menggeser kurva log dosis-respons Obat A ke arah kanan secara paralel tanpa menurunkan efek maksimal (Emax). Sementara itu, penambahan Senyawa Y menyebabkan penurunan nilai Emax Obat A secara signifikan yang tidak dapat dipulihkan walaupun dosis Obat A ditingkatkan hingga konsentrasi maksimal. Bagaimanakah klasifikasi mekanisme farmakodinamik dari Senyawa X dan Senyawa Y?",
+    "options": [
+      "A. Senyawa X: Antagonis Kompetitif Reversibel; Senyawa Y: Antagonis Irreversibel / Non-kompetitif",
+      "B. Senyawa X: Agonis Parsial; Senyawa Y: Antagonis Kompetitif Reversibel",
+      "C. Senyawa X: Antagonis Non-kompetitif; Senyawa Y: Agonis Terbalik",
+      "D. Senyawa X: Antagonis Irreversibel; Senyawa Y: Antagonis Alosterik Positif",
+      "E. Senyawa X: Agonis Terbalik; Senyawa Y: Antagonis Kompetitif Reversibel"
+    ],
+    "correct_letter": "A",
+    "rationale": "Antagonis kompetitif reversibel (Senyawa X) berebutan situs aktif yang sama dengan agonis. Hambatan ini dapat diatasi dengan meningkatkan konsentrasi agonis, sehingga kurva log dosis-respons bergeser ke kanan (EC50 meningkat/potensi turun), tetapi Emax (efikasi) tetap konstan. Sebaliknya, antagonis irreversibel atau non-kompetitif (Senyawa Y) berikatan secara kovalen pada situs aktif atau berikatan pada situs alosterik, sehingga mengurangi jumlah reseptor fungsional yang tersedia. Hambatan ini tidak dapat diatasi dengan penambahan agonis, yang secara khas menurunkan Emax (efikasi berkurang).",
+    "distractor_analysis": "Opsi B, C, D, dan E salah karena membalikkan atau mengonstruksikan mekanisme kurva secara tidak tepat. Agonis parsial jika diberikan sendiri memiliki Emax lebih rendah, tetapi pergeseran paralel kurva kanan khas untuk antagonis kompetitif reversibel."
+  },
+  {
+    "id": 4,
+    "level": "Level 2 (C3-C4: Analisis Mekanisme & Kurva)",
+    "question": "Seorang pria berusia 58 tahun dengan riwayat hipertensi dan penyakit jantung koroner mengonsumsi Atenolol (suatu beta-1 blocker selektif) secara teratur selama 3 tahun. Pasien mendadak menghentikan penggunaan obatnya sendiri karena merasa sudah pulih. Dua hari kemudian, pasien dilarikan ke IGD dengan krisis hipertensi, dada berdebar kencang (takikardia berat), dan tremor. Apakah mekanisme farmakodinamik molekuler yang paling tepat menjelaskan terjadinya kondisi 'rebound phenomenon' pada pasien ini?",
+    "options": [
+      "A. Desensitisasi reseptor beta-1 akibat stimulasi katekolamin kronis.",
+      "B. Down-regulation populasi reseptor beta-1 pada membran miokardium.",
+      "C. Up-regulation (peningkatan densitas) reseptor beta-1 pada membran sel miokardium.",
+      "D. Peningkatan metabolisme atenolol secara induksi enzim hepatic CYP3A4.",
+      "E. Pembentukan antibodi anti-reseptor beta-1 yang mengaktivasi reseptor secara permanen."
+    ],
+    "correct_letter": "C",
+    "rationale": "Penggunaan antagonis reseptor secara kronis (seperti Atenolol) menghambat stimulasi reseptor oleh ligan endogen. Sebagai respon kompensasi seluler terhadap ketiadaan sinyal, sel menyintesis dan menempatkan lebih banyak reseptor pada permukaan membran (proses Up-regulation / supersensitivitas). Ketika penghentian obat dilakukan secara mendadak (abrupt withdrawal), jumlah reseptor beta-1 yang hiper-densitas tersebut tiba-tiba terpapar oleh katekolamin endogen (norepinefrin/epinefrin), memicu respons hiper-reaktif berupa takikardia berat dan krisis hipertensi rebound.",
+    "distractor_analysis": "Opsi A dan B salah karena desensitisasi dan down-regulation terjadi akibat paparan paparan paparan agonis secara berlebihan/kronis (bukan antagonis), yang menyebabkan penurunan respons atau penurunan jumlah reseptor. Opsi D salah karena fenomena ini adalah proses farmakodinamik reseptor, bukan perubahan eliminasi farmakokinetik. Opsi E salah karena rebound withdrawal tidak melibatkan respons autoimun antibodi."
+  },
+  {
+    "id": 5,
+    "level": "Level 3 (C5-C6: Kasus Klinis / Vignette Pasien)",
+    "question": "Seorang wanita berusia 67 tahun dengan gagal jantung sistemik dan fibrilasi atrium dirawat di ruang rawat inap dan mendapat terapi Digoksin. Dokter yang merawat sangat berhati-hati dalam titrasi dosis karena mengetahui profil Indeks Terapi (Therapeutic Index / TI) obat ini. Dalam uji klinis populasi, diperoleh data farmakodinamik Digoksin: TD50 (dosis toksik pada 50% subjek) = 2,0 ng/mL dan ED50 (dosis efektif pada 50% subjek) = 1,0 ng/mL. Manakah analisis klinis dan keputusan pemantauan yang PALING TEPAT berdasarkan parameter tersebut?",
+    "options": [
+      "A. Digoksin memiliki Indeks Terapi yang lebar (TI = 10), sehingga pemantauan kadar obat tidak diperlukan secara rutin.",
+      "B. Digoksin memiliki Indeks Terapi yang sempit (TI = 2,0), sehingga memerlukan Therapeutic Drug Monitoring (TDM) berkala untuk mencegah toksisitas fatal.",
+      "C. Digoksin memiliki Indeks Terapi TI = 0,5, yang menunjukkan batas keamanan sangat tinggi.",
+      "D. Indeks Terapi Digoksin yang tinggi menunjukkan bahwa rentang antara dosis terapi dan dosis toksik sangat jauh.",
+      "E. Nilai TI tidak relevan secara klinis karena efek inotropik digoksin tidak bergantung pada konsentrasi plasma."
+    ],
+    "correct_letter": "B",
+    "rationale": "Indeks Terapi (Therapeutic Index / TI) dihitung dengan rumus TI = TD50 / ED50 (atau LD50 / ED50). Pada kasus ini, TI Digoksin = 2,0 / 1,0 = 2,0. Nilai TI yang sangat kecil/dekat dengan angka 1 menunjukkan bahwa obat memiliki 'Narrow Therapeutic Window' (Indeks Terapi Sempit). Artinya, dosis yang dibutuhkan untuk mencapai efek terapeutik sangat dekat dengan dosis yang menimbulkan toksisitas (seperti aritmia letal, mual, gangguan penglihatan xanthopsia). Oleh karena itu, obat dengan TI sempit seperti Digoksin, Teofilin, Warfarin, dan Fenitoin wajib dipantau melalui Therapeutic Drug Monitoring (TDM) kadar plasma secara ketat.",
+    "distractor_analysis": "Opsi A salah karena perhitungan TI = 2, bukan 10, dan TI 2 tergolong sempit. Opsi C salah karena kalkulasi TI adalah TD50/ED50 (2/1 = 2), bukan ED50/TD50. Opsi D salah karena nilai TI = 2 menunjukkan rentang keamanan yang sangat sempit, bukan tinggi. Opsi E salah karena TI sangat relevan secara klinis dalam memandu keamanan pemberian obat."
+  },
+  {
+    "id": 6,
+    "level": "Level 3 (C5-C6: Kasus Klinis / Vignette Pasien)",
+    "question": "Seorang laki-laki 45 tahun dengan kanker pankreas stadium lanjut telah mengonsumsi Morfin ( agonis penuh reseptor mu-opioid) dosis tinggi selama 4 bulan dengan kontrol nyeri yang adekuat. Karena keluhan konstipasi yang sangat mengganggu, dokter di poliklinik mengganti Morfin secara mendadak dengan Buprenorfin (agonis parsial reseptor mu-opioid berafinitas sangat tinggi). Dua jam setelah meminum Buprenorfin, pasien datang ke IGD dengan ansietas berat, kram abdomen hebat, diaphoresis, midriasis, dan keluhan nyeri kanker yang kembali dirasakan sangat parah (precipitated acute withdrawal). Bagaimanakah penjelasan farmakodinamik molekuler atas kejadian tersebut dan langkah tata laksana yang paling tepat?",
+    "options": [
+      "A. Buprenorfin bekerja sebagai antagonis irreversibel yang menghancurkan struktur fisik reseptor opioid; tata laksana berupa pemberian Nalokson dosis tinggi.",
+      "B. Buprenorfin memiliki afinitas tinggi tetapi efikasi intrinsik lebih rendah dibanding morfin, sehingga menggeser morfin dari reseptor dan mendegradasi respons fungsional total; tata laksana berupa hentikan Buprenorfin dan titrasi kembali Morfin.",
+      "C. Buprenorfin memicu desensitisasi cepat (tachyphylaxis) pada reseptor muskarinik; tata laksana berupa pemberian Atropin intravena.",
+      "D. Morfin menyebabkan up-regulation reseptor yang kemudian diinaktivasi secara alosterik oleh Buprenorfin; tata laksana berupa hemodialisis.",
+      "E. Buprenorfin meningkatkan eliminasi metabolisme Morfin di hati via induksi CYP2D6; tata laksana berupa pemberian inhibitor enzim."
+    ],
+    "correct_letter": "B",
+    "rationale": "Buprenorfin adalah agonis parsial reseptor mu-opioid dengan afinitas ikatan (binding affinity) yang sangat tinggi tetapi efikasi intrinsik (alpha) yang sedang/rendah. Pada pasien yang ketergantungan fisik dan reseptornya sudah kejenuhan oleh Agonis Penuh (Morfin), pemberian agonis parsial berafinitas tinggi akan merebut/menggeser morfin dari situs aktif reseptor. Namun, karena aktivitas intrinsik Buprenorfin lebih rendah, terjadi penurunan tajam pada total stimulasi reseptor mu (efek fungsional net terdistorsi ke bawah). Hal ini secara efisien menjadikan Buprenorfin bertindak sebagai 'antagonis fungsional/kompetitif', yang memicu timbulnya sindrom putus obat akut (precipitated withdrawal) dan kembalinya rasa nyeri. Tata laksananya adalah menghentikan agonis parsial dan mentitrasi kembali agonis penuh (Morfin) secara hati-hati.",
+    "distractor_analysis": "Opsi A salah karena Buprenorfin bukan antagonis irreversibel dan pemberian Nalokson (antagonis murni) justru akan memperparah gejala putus obat (withdrawal). Opsi C salah karena fenomena ini melibatkan reseptor mu-opioid, bukan muskarinik. Opsi D dan E salah karena mekanismenya murni kompetisi farmakodinamik pada orthosteric site reseptor opioid, bukan disebabkan perubahan metabolisme CYP atau perusakan alosterik."
+  }
+]

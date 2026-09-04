@@ -1,0 +1,27 @@
+[
+  {
+    "front": "PRE-TEST KUNCI: Berdasarkan intuisi radiologis Anda, jaringan apa di dalam tubuh manusia yang memiliki nilai atenuasi mendekati 0 HU (Hounsfield Units), dan mengapa demikian?",
+    "back": "Jaringan tersebut adalah air murni (dan secara fisiologis, sebagian besar jaringan lunak seperti otot atau darah murni). Nilai 0 HU ditetapkan sebagai titik referensi standar berdasarkan koefisien atenuasi linear air pada energi foton tertentu. Jaringan dengan nilai HU mendekati nol tidak menyerap atau meneruskan sinar-X secara ekstrem, berada di tengah skala antara udara (-1000 HU) dan tulang (+1000 HU).",
+    "phase": "PRIME"
+  },
+  {
+    "front": "TANTANGAN INTUISI: Jika Anda melihat hasil CT scan di mana paru-paru pasien tampak berwarna putih terang (radiopak) alih-alih hitam (radiolusen), patologi fisik apa yang secara intuitif langsung Anda curigai terjadi pada alveoli?",
+    "back": "Alveoli terisi oleh cairan, darah, nanah, atau jaringan fibrotik (bukan lagi udara). Secara kognitif neurosains, otak kita dilatih mencocokkan 'Hitam = Udara'. Ketika densitas udara (-1000 HU) digantikan oleh cairan atau jaringan patologis (yang mendekati 0 hingga +100 HU, misal pada edema paru, pneumonia, atau ARDS), terjadi pergeseran atenuasi drastis yang membuat area tersebut tampak putih (radiopak).",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRE-TEST KLINIS: Mengapa skala Hounsfield Unit (HU) untuk tulang (kortikal) ditetapkan pada batas atas +1000 HU, dan bukan angka yang lebih rendah atau terbatas pada 0?",
+    "back": "Karena tulang kortikal memiliki densitas massa dan nomor atom efektif ($Z$ efektif, terutama kalsium dan fosfor) yang sangat tinggi, menyebabkan atenuasi foton sinar-X yang masif. Skala HU dikalibrasi secara linear terhadap air (0 HU) dan udara (-1000 HU). Tulang menempati spektrum positif ekstrem (+1000 HU atau lebih pada tulang kompak) karena kemampuannya memblokir hampir seluruh foton sinar-X, menghasilkan gambaran radiopak (putih) murni.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "TANTANGAN KOGNITIF: Mengapa otak kita secara intuitif mengaitkan 'gelap/hitam' pada citra radiografi dengan 'ketiadaan materi atau udara', dan bagaimana prinsip fisik atenuasi sinar-X memvalidasi intuisi ini?",
+    "back": "Secara evolusioner dan optik, kita terbiasa bahwa bayangan terjadi karena blokade cahaya. Dalam X-ray, foton menembus jaringan. Udara memiliki densitas elektron yang sangat rendah, sehingga sedikit sekali foton yang diatenuasi (diserap/dihamburkan). Akibatnya, jumlah foton maksimum yang mengenai detektor menghasilkan sinyal elektrik tertinggi, yang oleh komputer diterjemahkan menjadi warna hitam (radiolusen) pada film/layar.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRE-TEST MEKANISME: Jika seorang pasien mengalami fraktur kompresivertebra, fenomena atenuasi apa yang akan Anda cari pada CT scan untuk membedakan antara fraktur akut (karena trauma) dan fraktur kronis/metastasis?",
+    "back": "Meskipun keduanya menunjukkan perubahan bentuk tulang, Anda mencari variasi nilai HU pada trabekula dan korteks. Fraktur akut menunjukkan garis fraktur dengan densitas darah/cairan di sekitarnya. Metastasis atau lesi destruktif menunjukkan area fokal dengan penurunan nilai HU drastis (lisis tulang mendekati jaringan lunak/cairan) atau peningkatan HU ireguler (sklerosis > +1000 HU) akibat aktivitas osteoblastik abnormal, membedakannya dari trauma mekanik murni.",
+    "phase": "PRIME"
+  }
+]

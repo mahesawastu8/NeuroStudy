@@ -1,0 +1,93 @@
+[
+  {
+    "id": 1,
+    "level": "Level 1 (C1-C2: Fondasi & Definisi)",
+    "question": "Manakah ciri histologis yang membedakan adenohipofisis (hipofisis anterior) dan neurohipofisis (hipofisis posterior) berdasarkan sediaannya?",
+    "options": [
+      "A. Adenohipofisis kaya akan badan herring dan akson unmyelinated, sedangkan neurohipofisis tersusun atas sel-sel glandular asidofil, basofil, dan kromofob.",
+      "B. Adenohipofisis tersusun atas sarang-sarang sel glandular (asidofil, basofil, kromofob) dengan kaya kapiler sinusoid, sedangkan neurohipofisis terdiri atas serabut saraf tidak bermielin, pituisit, dan badan herring.",
+      "C. Adenohipofisis tidak memiliki pembuluh darah, sedangkan neurohipofisis memiliki sistem portal hipofisis yang sangat padat.",
+      "D. Keduanya memiliki struktur histologis yang identik hanya dibedakan oleh letaknya.",
+      "E. Neurohipofisis menghasilkan hormon pelepas (releasing hormones) secara langsung dari sel kelenjar utamanya."
+    ],
+    "correct_letter": "B",
+    "rationale": "Adenohipofisis bersifat glandular (kelenjar endokrin sejati) dengan sel asidofil, basofil, dan kromofob di antara kapiler sinusoid. Neurohipofisis bersifat jaringan saraf (pars nervosa) yang berisi akson dari hipotalamus, badan Herring (penyimpanan neurohipofisis), dan sel glia khusus yang disebut pituisit.",
+    "distractor_analysis": "Opsi A terbalik ciri-cirinya. Opsi C salah karena sistem portal hipotalamus-hipofisis berada di adenohipofisis. Opsi D dan E salah karena struktur dan fungsinya sangat berbeda."
+  },
+  {
+    "id": 2,
+    "level": "Level 2 (C2-C3: Pemahaman & Penerapan)",
+    "question": "Seorang mahasiswa mengamati preparat histologi kelenjar adrenal di bawah mikroskop cahaya. Ia menemukan zona terluar dari korteks adrenal yang sel-selnya tersusun membentuk kelompok atau lengkungan melingkar (archade). Apakah nama zona tersebut dan apa hormon utamanya?",
+    "options": [
+      "A. Zona retikularis, menghasilkan androgen adrenal",
+      "B. Zona fasikulata, menghasilkan glukokortikoid (kortisol)",
+      "C. Zona glomerulosa, menghasilkan mineralokortikoid (aldosteron)",
+      "D. Medula adrenal, menghasilkan katekolamin",
+      "E. Zona medularis, menghasilkan epinefrin"
+    ],
+    "correct_letter": "C",
+    "rationale": "Zona glomerulosa adalah lapisan terluar korteks adrenal di bawah kapsul, sel-selnya tersusun melingkar menyerupai bola/lengkungan (glomerulus) dan berfungsi menghasilkan hormon mineralokortikoid, terutama aldosteron.",
+    "distractor_analysis": "Opsi A salah susunan dan hormonnya. Opsi B tersusun berderet radial (fasikel). Opsi D dan E bukan bagian korteks melainkan medula."
+  },
+  {
+    "id": 3,
+    "level": "Level 3 (C3-C4: Aplikasi & Analisis)",
+    "question": "Pada pengamatan sediaan histologi kelenjar paratiroid, diidentifikasi dua jenis sel utama yaitu sel utama (chief cells) dan sel oksifil. Karakteristik manakah yang paling tepat membedakan sel oksifil dari chief cells?",
+    "options": [
+      "A. Sel oksifil berukuran lebih kecil, terpulas basofilik kuat, dan jumlahnya mendominasi seluruh parenkim paratiroid.",
+      "B. Sel oksifil berukuran lebih besar, memiliki sitoplasma dengan eosinofilia kuat karena kaya akan mitokondria, dan umumnya muncul seiring bertambahnya usia.",
+      "C. Sel oksifil menghasilkan parathormon (PTH) dalam jumlah masif, sedangkan chief cells tidak aktif.",
+      "D. Sel oksifil hanya ditemukan pada hewan neonatus dan mengalami apoptosis sempurna pada usia dewasa.",
+      "E. Chief cells mengandung banyak granula zymogen asam, sedangkan sel oksifil kaya akan lemak netral."
+    ],
+    "correct_letter": "B",
+    "rationale": "Sel oksifil adalah sel yang lebih besar dengan sitoplasma sangat eosinofilik akibat jumlah mitokondria yang melimpah. Sel ini lebih sedikit dibanding chief cells dan jumlahnya meningkat seiring bertambahnya usia (jarang sebelum pubertas).",
+    "distractor_analysis": "Opsi A salah karena sel oksifil lebih besar dan eosinofilik, serta bukan sel mayoritas (chief cell yang mayoritas). Opsi C salah karena chief cell yang memproduksi PTH. Opsi D dan E salah secara biologi sel."
+  },
+  {
+    "id": 4,
+    "level": "Level 4 (C4: Analisis Kompleks)",
+    "question": "Suatu sediaan histologi kelenjar tiroid menunjukkan gambaran hiperaktif: folikel mengecil, sel epitel pembatas menjadi sangat tinggi (silindris), koloid sedikit dan menunjukkan banyak vakuola reabsorpsi (reabsorption vacuoles) di tepinya. Berdasarkan analisis mikroskopis ini, kondisi fungsional apa yang sedang dialami kelenjar tersebut?",
+    "options": [
+      "A. Hipotiroidisme primer akibat destruksi autoimun",
+      "B. Hipertiroidisme (peningkatan aktivitas sintesis dan sekresi hormon tiroid)",
+      "C. Keadaan istirahat kelenjar tiroid dengan penyimpanan koloid maksimal",
+      "D. Defisiensi iodium kronis yang berujung pada atrofi total folikel",
+      "E. Keadaan normal tanpa adanya stimulasi TSH",
+      "Status hipofisis anterior mengalami panhipopituitarisme"
+    ],
+    "correct_letter": "B",
+    "rationale": "Folikel tiroid yang aktif/hiperaktif ditandai oleh epitel yang tinggi (silindris), koloid menyusut karena banyak dipakai, serta terdapat vakuola reabsorpsi di tepi koloid tempat tiroglobulin ditarik masuk ke sel folikuler untuk dipecah menjadi T3/T4.",
+    "distractor_analysis": "Opsi A dan C justru menunjukkan folikel tiroid inaktif/hipotiroid (epitel pipih, koloid padat dan melimpah). Opsi D salah karena defisiensi iodium memicu pembesaran kelenjar (gondok) dengan koloid melimpah namun tidak efektif. Opsi E salah."
+  },
+  {
+    "id": 5,
+    "level": "Level 5 (C5: Evaluasi & Sintesis)",
+    "question": "Seorang peneliti melakukan mikroskopi elektron pada sel-sel di medula adrenal. Ia ingin mengevaluasi ciri ultrastruktural sel yang mensekresikan epinefrin versus norepinefrin. Kriteria morfologi apa yang paling akurat digunakan untuk membedakan kedua jenis sel medula adrenal tersebut?",
+    "options": [
+      "A. Sel penghasil epinefrin memiliki inti sel yang berlobus sangat banyak, sedangkan sel norepinefrin tidak berinti.",
+      "B. Vesikel sekretori (granula kromaffin) pada sel epinefrin berukuran lebih kecil dan tampak kurang padat elektron dibandingkan granula pada sel norepinefrin yang memiliki inti padat elektron dikelilingi halo terang.",
+      "C. Sel epinefrin hanya dijumpai di korteks zona retikularis, sedangkan sel norepinefrin di medula.",
+      "D. Sel epinefrin memiliki retikulum endoplasma kasar yang sangat sedikit karena tidak memproduksi protein.",
+      "E. Sel norepinefrin tidak memiliki membran sel yang jelas karena berupa sinsitium."
+    ],
+    "correct_letter": "B",
+    "rationale": "Medula adrenal memiliki dua jenis sel kromaffin. Sel yang memproduksi epinefrin mengandung granula yang lebih kecil, kurang padat elektron, dan homogen. Sel yang memproduksi norepinefrin memiliki granula yang lebih besar dengan pusat padat elektron (core) yang dikelilingi oleh ruang terang (halo).",
+    "distractor_analysis": "Opsi A, C, D, dan E salah secara struktural dan biologis sel pada medula adrenal."
+  },
+  {
+    "id": 6,
+    "level": "Level 6 (C6: Kreasi & Desain Hipotesis)",
+    "question": "Jika seorang patolog merancang model jaringan endokrin buatan (tissue engineering) untuk mereplikasi umpan balik negatif aksis Hipotalamus-Hipofisis-Tiroid (HPT), komponen histologis seluler apa saja yang mutlak harus dirancang dan diletakkan dalam satu sistem sirkulasi mikro untuk mereplikasi kaskade tersebut secara akurat?",
+    "options": [
+      "A. Sel neurosekretori hipotalamus (TRH), sel basofil adenohipofisis (TSH), dan sel folikuler tiroid (T3/T4)",
+      "B. Sel pituisit neurohipofisis, sel oksifil paratiroid, dan sel C tiroid",
+      "C. Sel kromaffin medula adrenal, sel zona fasikulata korteks, dan sel asidofil hipofisis",
+      "D. Sel chief paratiroid, sel parafolikuler tiroid, dan sel glomerulosa adrenal",
+      "E. Sel kromofob hipofisis, sel epitel koloid tiroid, dan sel purkinje serebelum"
+    ],
+    "correct_letter": "A",
+    "rationale": "Untuk mereplikasi aksis HPT secara utuh, sistem harus mencakup: 1) Hipotalamus yang menghasilkan TRH (Thyrotropin-Releasing Hormone), 2) Adenohipofisis (khususnya sel tirotrof yang merupakan sel basofil) yang merespons TRH dengan mensekresikan TSH, dan 3) Kelenjar tiroid (sel folikuler) yang merespons TSH dengan memproduksi T3 dan T4 yang nantinya akan memberikan umpan balik negatif ke tingkat atas.",
+    "distractor_analysis": "Opsi B, C, D, dan E melibatkan komponen sel dari organ atau aksis hormonal yang tidak sesuai dengan jalur spesifik tiroid (HPT axis)."
+  }
+]

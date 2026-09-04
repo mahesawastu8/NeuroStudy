@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "question": "Mengapa pada sistem jaringan yang memiliki *spare receptors* (reseptor cadangan), nilai $EC_{50}$ suatu agonis penuh bisa jauh lebih rendah daripada nilai $K_d$-nya, dan bagaimana pemberian antagonis ireversibel konsentrasi rendah awal hanya menggeser kurva dosis-respons ke kanan tanpa menurunkan $E_{max}$?",
+    "key_concept": "Amplifikasi sinyal pasca-reseptor, hubungan efikasi intrinsik dengan okupansi reseptor ($EC_{50} < K_d$), dan mekanisme kompensasi *spare receptors* terhadap blokade ireversibel parsial.",
+    "hint": "Analisis bagaimana kelimpahan reseptor melampaui jumlah molekul efektor di dalam sel, serta hitung dampak matematis blokade ireversibel terhadap ambang okupansi minimal yang dibutuhkan untuk mencapai respons maksimal."
+  },
+  {
+    "id": 2,
+    "question": "Bagaimana kaskade peristiwa molekuler yang dimulai dari stimulasi berulang agonis pada GPCR memicu perekrutan *G-protein Coupled Receptor Kinase* (GRK) dan $\\beta$-arrestin, serta mengapa proses desensitisasi homolog ini berlanjut hingga perubahan taksonomi *receptor trafficking* (internalisasi vs degradasi lysosomal)?",
+    "key_concept": "Fosforilasi GPCR oleh GRK, sterikal hindrans alosterik via $\\beta$-arrestin yang memutus ikatan G-protein, endositosis terperangkap klatrin (*clathrin-coated pits*), serta pemilahan (*sorting*) reseptor untuk daur ulang (*resensitization*) vs degradasi.",
+    "hint": "Uraikan urutan kronologis pergeseran konformasi reseptor dari terminasi sinyal cepat (*tachyphylaxis*) hingga pembersihan fisik reseptor dari permukaan membran (*down-regulation*)."
+  },
+  {
+    "id": 3,
+    "question": "Apa konsekuensi logis secara farmakodinamik terhadap kerapatan reseptor permukaan dan sensitivitas agonis endogen jika penggunaan antagonis kompetitif jangka panjang dihentikan secara mendadak (*abrupt withdrawal*), dan bagaimana fenomena ini dapat memicu respons klinis yang membahayakan jiwa?",
+    "key_concept": "Up-regulasi reseptor akibat hilangnya stimulasi agonis, peningkatan *receptor density*, fenomena *rebound supersensitivity*, dan pergeseran kurva dosis-respons agonis endogen ke kiri secara ekstrem.",
+    "hint": "Pertimbangkan bagaimana sel beradaptasi terhadap blokade kronis untuk mempertahankan homeostasis sinyal, dan apa yang terjadi ketika antagonis mendadak hilang sementara populasi reseptor telah berlipat ganda."
+  }
+]

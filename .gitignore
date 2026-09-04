@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.bak
+
+# Streamlit local state
+.streamlit/secrets.toml
+
+# Environment & Secrets
+.env
+data/config.json
+data/active_google_session.json
+data/active_public_url.txt
+data/users/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

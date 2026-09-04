@@ -1,0 +1,42 @@
+[
+  {
+    "front": "PRIME: Adenohipofisis (Pars Distalis) dikendalikan oleh sistem portal hipotalamus-hipofisis. Berdasarkan prinsip sel target, apa korelasi antara tipe pewarnaan (asidofil vs basofil) dengan jenis hormon yang disekresikannya?",
+    "back": "Sel Asidofil (Somatotrof & Laktotrof) menyekresi hormon non-glikoprotein berukuran kecil (GH, Prolaktin) yang larut dalam sitoplasma dengan afinitas tinggi terhadap pewarna asam. Sel Basofil (Tirotrof, Gonadotrof, Kortikotrof) menyekresi hormon glikoprotein molekul besar (TSH, FSH, LH, ACTH) yang mengandung residu karbohidrat bermuatan negatif, sehingga mengikat pewarna basa.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Neurohipofisis (Pars Nervosa) tidak memiliki sel sekretori kelenjar endokrin sejati. Bagaimana mekanisme sintesis, transpor, dan penyimpanan hormon Oksitosin & ADH sebelum dilepaskan ke kapiler fenestrata?",
+    "back": "Hormon disintesis oleh badan sel neuron di nukleus supraoptik & paraventrikuler hipotalamus -> ditransportasikan melalui akson unmyelinated tractus supraoptico-hypophysialis -> disimpan sementara di ujung akson dalam bentuk pelebaran aksonal yang disebut **Herring Bodies** -> dilepaskan langsung ke kapiler sinusoid fenestrata di bawah stimulus elektrik.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Pituicyte adalah sel glial utama pada Pars Nervosa. Apakah fungsi utama sel ini dalam regulasi sekresi neurohipofisis?",
+    "back": "Pituicyte berfungsi analog dengan sel astroglial di SSP (memberikan dukungan struktural dan nutrisi), serta mengatur plastisitas sinaptik dan akses ujung akson (Herring bodies) ke membran basal kapiler darah untuk memfasilitasi pelepasan Oksitosin dan ADH.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Kelenjar Tiroid memiliki unit fungsional folikel. Jelaskan perbedaan kausal morfofungsional antara Sel Folikuler yang aktif vs inaktif dalam memproses Koloid!",
+    "back": "Folikel aktif: Sel berbentuk *kolumner* (tinggi) dengan reabsorpsi koloid aktif (banyak vakuola reabsorpsi di tepi koloid). Folikel inaktif/hipoaktif: Sel berbentuk *skuamosa hingga kuboid rendah*, koloid padat dan melimpah karena penyimpanan hormon tiroglobulin tanpa stimulasi TSH yang memadai.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Sel Parafolikuler (Sel C) terletak di luar lumen folikel tiroid. Apa asal embriologis, marker fungsional, dan mekanisme umpan balik hormon yang disekresikannya?",
+    "back": "Asal embriologis: *Neural Crest* (bukan kantong faring seperti sel folikuler). Hormon: *Kalsitonin* (menurunkan kalsium darah dengan menghambat osteoklas). Mekanisme: Disekresi secara langsung sebagai respons terhadap hiperkalsemia independen dari sumbu hipotalamus-pituitari.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Identifikasi histologis kelenjar Paratiroid didasarkan pada dua sel utama: Chief Cells dan Oxyphil Cells. Apa perbedaan signifikansi fungsional klinis di antara keduanya?",
+    "back": "Chief Cells (kecil, sitoplasma pucat/glikogen) adalah sel sekretori utama yang memproduksi Parathyroid Hormone (PTH) untuk menaikkan kadar kalsium darah. Oxyphil Cells (lebih besar, eosinofilik pekat akibat banyak mitokondria) adalah sel matur/senescent tanpa aktivitas sekretori signifikan yang jumlahnya meningkat seiring bertambahnya usia.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Korteks Adrenal terbagi menjadi 3 zona (Glomerulosa, Fasikulata, Retikularis) dengan susunan sel yang berbeda. Bagaimana korelasi arsitektur seluler Zona Fasikulata dengan fungsi utamanya?",
+    "back": "Zona Fasikulata tersusun dalam korda lurus paralel (*fascicles*) dipisahkan oleh kapiler sinusoid lebar. Sitoplasmanya dipenuhi *lipid droplet* (tampak sebagai *spongiocyte*) karena sel ini mensintesis hormon steroid glukokortikoid (Kortisol) yang berbahan dasar kolesterol.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Medula Adrenal secara embriologis dan fungsional adalah modifikasi sistem saraf simpatis. Sel Kromafin bertindak sebagai apa, dan apa ciri khas sitologisnya?",
+    "back": "Sel Kromafin bertindak sebagai *neuron pascaganglion simpatis yang kehilangan aksonnya*, berubah menjadi sel endokrin. Ciri khasnya: mengandung granula padat elektron yang menyimpan Katekolamin (Epinefrin/Norepinefrin) yang berubah warna menjadi cokelat/gelap jika direaksikan dengan garam kromat (reaksi kromafin).",
+    "phase": "PRIME"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "front": "PRIME: Apa definisi fundamental dari Farmakodinamik dalam interaksi obat-tubuh, dan apa bedanya secara konseptual dengan Farmakokinetik?",
+    "back": "Farmakodinamik adalah studi tentang aksi obat terhadap tubuh untuk menghasilkan efek biologis ('what drug does to the body'). Sebaliknya, farmakokinetik mempelajari apa yang dilakukan tubuh terhadap obat (ADME: Absorpsi, Distribusi, Metabolisme, Ekskresi). Pemahaman farmakodinamik krusial untuk menentukan terapi rasional dan desain obat baru.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Mengapa pemahaman mendalam tentang 4 target utama molekuler obat (Reseptor, Ion Channel, Enzim, Transporter) sangat krusial dalam kognisi neurosains farmakologis?",
+    "back": "Sebagian besar obat spesifik berikatan dengan protein target ini untuk mengubah pensinyalan seluler. Gangguan atau modulasi pada target-target ini (misalnya transporter serotonin oleh SSRI atau kanal ion oleh anestetik lokal) mendasari seluruh manifestasi efek terapeutik maupun efek samping neuropsikiatrik yang kita amati secara klinis.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Berdasarkan intuisi fisiologis, apa perbedaan mendasar antara reseptor ionotropik (Ligand-Gated Ion Channels) dan metabotropik (GPCR) dalam hal kecepatan transmisi sinyal di sistem saraf?",
+    "back": "Reseptor ionotropik (seperti nAChR atau NMDA) berikatan langsung dengan kanal ion, menghasilkan transmisi sinyal yang sangat cepat (milisikon) untuk fungsi sinaptik kilat. Sebaliknya, GPCR (G-Protein Coupled Receptors) bekerja melalui second messenger intraseluler dan kaskade enzimatik, menghasilkan respons yang lebih lambat namun memiliki amplifikasi sinyal yang luas dan bertahan lebih lama.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Bagaimana Anda membedakan secara intuitif konsep 'Potensi' (Potency, diwakili EC50) dan 'Efikasi' (Efficacy, diwakili Emax) pada kurva dosis-respons?",
+    "back": "Potensi adalah ukuran *jumlah dosis* yang dibutuhkan obat untuk menghasilkan efek tertentu (semakin kecil dosis untuk mencapai efek 50%, semakin tinggi potensinya). Efikasi adalah *kemampuan maksimal* obat untuk memicu respons biologis terlepas dari besar kecilnya dosis. Efikasi klinis seringkali jauh lebih penting secara terapeutik daripada sekadar potensi.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Mengapa paparan obat agonis secara kronis dapat memicu fenomena Toleransi (penurunan respons), sementara penggunaan antagonis reseptor secara kronis dapat memicu Sensitisasi (peningkatan respons)?",
+    "back": "Ini adalah mekanisme homeostatis seluler (plasticity). Paparan agonis kronis memicu *down-regulation* atau desensitisasi reseptor untuk melindungi sel dari over-stimulasi (membutuhkan dosis lebih tinggi/toleransi). Sebaliknya, blokade reseptor kronis oleh antagonis memicu *up-regulation* reseptor sebagai kompensasi, membuat sel menjadi sangat hipersensitif terhadap ligan (sensitisasi/tardive dyskinesia).",
+    "phase": "PRIME"
+  }
+]

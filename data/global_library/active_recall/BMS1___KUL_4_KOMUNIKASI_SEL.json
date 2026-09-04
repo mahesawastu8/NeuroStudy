@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "question": "Mengapa aktivasi reseptor Gs pada jalur GPCR secara fisiologis berujung pada peningkatan aktivitas Protein Kinase A (PKA), sementara aktivasi reseptor Gi justru menghambat enzim adenilat siklase?",
+    "key_concept": "Perbedaan fungsional subunit protein G (Gs vs Gi) dan pengaturan kadar second messenger cAMP",
+    "hint": "Fokuskan penalaran pada bagaimana protein G berinteraksi dengan enzim adenilat siklase untuk menaikkan atau menurunkan produksi cAMP."
+  },
+  {
+    "id": 2,
+    "question": "Bagaimana pembelahan PIP2 oleh enzim fosfolipase C (PLC) mampu memicu dua jalur transduksi sinyal intraseluler yang berbeda secara simultan melalui IP3 dan DAG?",
+    "key_concept": "Percabangan jalur sinyal phosphoinositide (IP3/DAG) dan peran kalsium serta Protein Kinase C (PKC)",
+    "hint": "Tinjau nasib masing-masing produk hasil pemecahan PIP2: ke mana IP3 berdifusi (retikulum endoplasma) dan di mana DAG bekerja (membran plasma)."
+  },
+  {
+    "id": 3,
+    "question": "Apa konsekuensi logis pada transkripsi genetik jika terjadi kegagalan fosforilasi silang (cross-phosphorylation) pada domain tirosin kinase dari dua monomer Reseptor Tirosin Kinase (RTK) setelah pengikatan ligan?",
+    "key_concept": "Autofosforilasi RTK dan kegagalan perekrutan protein adaptor untuk aktivasi jalur hilir (downstream) seperti MAPK/PI3K",
+    "hint": "Pikirkan domain tirosin kinase sebagai 'kode pos' atau tempat docking; jika tidak terfosforilasi, protein adaptor apa yang gagal menempel?"
+  }
+]

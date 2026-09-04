@@ -1,0 +1,42 @@
+[
+  {
+    "front": "PRIME: Bagaimana mekanisme aktivasi Reseptor Terkait Protein G (GPCR) mengubah GDP menjadi GTP pada subunit $\\alpha$?",
+    "back": "Ligand berikatan $\\rightarrow$ konformasi GPCR berubah $\\rightarrow$ bertindak sebagai GEF (Guanine nucleotide Exchange Factor) $\\rightarrow$ memicu pelepasan GDP dan pengikatan GTP pada subunit $G_{\\alpha}$, menyebabkan disosiasi kompleks $G_{\\alpha}$-GTP dari dimer $G_{\\beta\\gamma}$.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Jelaskan jalur sinyal hilir (downstream) yang diaktifkan oleh subunit $G_{\\alpha s}$ versus $G_{\\alpha i}$ terhadap enzim Adenilsiklase dan molekul cAMP.",
+    "back": "$G_{\\alpha s}$ (stimulatory) mengaktivasi Adenilsiklase $\\rightarrow$ meningkatkan produksi cAMP $\\rightarrow$ mengaktivasi PKA. $G_{\\alpha i}$ (inhibitory) menghambat Adenilsiklase $\\rightarrow$ menurunkan kadar cAMP.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Apa peran spesifik enzim Fosfolipase C (PLC) dalam kaitan dengan second messenger $IP_3$ dan DAG setelah aktivasi jalur $G_{\\alpha q}$?",
+    "back": "PLC memecah fosfolipid membran PIP2 menjadi: (1) DAG (Diacylglycerol) yang tetap di membran untuk mengaktivasi Protein Kinase C (PKC), dan (2) $IP_3$ (Inositol trisphosphate) yang berikatan dengan reseptornya di retikulum endoplasma untuk merilis ion $Ca^{2+}$ ke sitosol.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Bagaimana proses autofosforilasi pada Reseptor Tirosin Kinase (RTK) terjadi setelah pengikatan ligand (misal: Insulin/EGF)?",
+    "back": "Pengikatan ligand memicu dimerisasi reseptor RTK $\\rightarrow$ mendekatkan kedua domain kinase intraseluler $\\rightarrow$ terjadi fosforilasi silang (cross-phosphorylation) residu tirosin pada ekor karboksil-terminal satu sama lain.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Domain protein apa yang mengenali dan berikatan langsung dengan residu tirosin terfosforilasi pada RTK, dan apa contoh protein adaptor utamanya?",
+    "back": "Dikenali oleh domain **SH2 (Src Homology 2)** atau domain PTB (Phosphotyrosine Binding). Contoh protein adaptor utama adalah **Grb2**, yang selanjutnya merekrut Sos (faktor pertukaran nukleotida guanin) untuk mengaktivasi jalur Ras.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Urutkan kaskade MAPK/ERK cascade yang diinisiasi oleh aktivasi monomerik G-protein Ras pada jalur RTK.",
+    "back": "Ras-GTP mengaktifkan **Raf** (MAPKKK) $\\rightarrow$ memfosforilasi dan mengaktifkan **MEK** (MAPKK) $\\rightarrow$ memfosforilasi dan mengaktifkan **ERK** (MAPK) $\\rightarrow$ ERK bertranslokasi ke nukleus untuk memfosforilasi faktor transkripsi (misal: Elk-1) guna mengatur ekspresi gen proliferasi sel.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Bagaimana mekanisme terminasi sinyal (desensitisasi) pada GPCR melibatkan protein Arrestin?",
+    "back": "Reseptor yang teraktivasi terus-menerus akan difosforilasi oleh GRK (G-protein Coupled Receptor Kinase) $\\rightarrow$ fosforilasi ini menciptakan situs ikatan bagi **Arrestin** $\\rightarrow$ Arrestin mengikat GPCR, mencegah coupling lebih lanjut dengan protein G, dan memediasi internalisasi reseptor via endositosis.",
+    "phase": "PRIME"
+  },
+  {
+    "front": "PRIME: Apa perbedaan fundamental antara second messenger lipofilik (seperti DAG) dan hidrofilik (seperti cAMP dan $IP_3$) dalam hal difusi di dalam sel?",
+    "back": "Second messenger hidrofilik ($cAMP, IP_3, Ca^{2+}$) berdifusi bebas melalui sitosol yang berair untuk mencapai target di berbagai kompartemen sel. Second messenger lipofilik (DAG) terbatas berdifusi secara lateral hanya di dalam bidang bilayer membran plasma untuk mengaktifkan target yang terikat membran (seperti PKC).",
+    "phase": "PRIME"
+  }
+]
