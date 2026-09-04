@@ -770,11 +770,21 @@ def ensure_user_has_materials(username):
             dest_count = len(list(dest_dir.glob("*.json")))
             source_count = len(list(source_dir.glob("*.json")))
             if dest_count < source_count:
-                import shutil
+                now_next = (datetime.datetime.now() + datetime.timedelta(days=1)).isoformat()
                 for f in source_dir.glob("*.json"):
                     tf = dest_dir / f.name
                     if not tf.exists():
-                        shutil.copy2(f, tf)
+                        try:
+                            d = json.loads(f.read_text(encoding="utf-8"))
+                            d["sessions"] = 0
+                            d["review_count"] = 0
+                            d["ease_factor"] = 2.5
+                            d.pop("last_interval", None)
+                            d["next_review"] = now_next
+                            tf.write_text(json.dumps(d, ensure_ascii=False, indent=2))
+                        except Exception:
+                            import shutil
+                            shutil.copy2(f, tf)
                         
         # Ensure starter flashcards are present for instant testing & Anki export
         fc_dest = user_root / "flashcards"
@@ -831,6 +841,20 @@ def login_or_register_google_account(email, display_name=None):
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or _safe_get_secret("GOOGLE_OAUTH_CLIENT_ID", "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com")
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or _safe_get_secret("GOOGLE_OAUTH_CLIENT_SECRET", "d-FL95Q19q7MQmFpd7hHD0Ty")
 GOOGLE_OAUTH_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH_REDIRECT_URI") or _safe_get_secret("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8501")
+
+def is_localhost_access():
+    """Mendeteksi apakah request berasal dari mesin lokal (localhost) atau dari internet publik."""
+    try:
+        if hasattr(st, "context") and hasattr(st.context, "headers"):
+            headers = st.context.headers or {}
+            host = str(headers.get("host", "") or headers.get("x-forwarded-host", "")).lower()
+            if "localhost" in host or "127.0.0.1" in host:
+                return True
+            if host:
+                return False
+    except Exception:
+        pass
+    return False
 
 def get_official_google_auth_url():
     """Menghasilkan URL otorisasi resmi Google OAuth 2.0."""
@@ -2777,9 +2801,9 @@ if "current_user" not in st.session_state or not st.session_state.current_user:
             with tab_guest:
                 st.markdown('''
 <div style="padding:4px 0 12px; text-align:center;">
-  <div style="font-weight:700; color:#38bdf8; font-size:0.95rem;">Akses Cepat Penguji Beta</div>
-  <p style="font-size:0.8rem; color:#94a3b8; line-height:1.5; margin:8px auto 0; max-width:92%;">
-    Ketik nama Anda untuk langsung mengeksplorasi <strong>208 Modul Kuliah Kedokteran</strong> &amp; fitur AI lengkap.
+  <div style="font-weight:700; color:#38bdf8; font-size:1rem;">🚀 Akses Cepat Teman &amp; Penguji (Tanpa Sandi)</div>
+  <p style="font-size:0.82rem; color:#94a3b8; line-height:1.5; margin:6px auto 0; max-width:94%;">
+    Ketik nama dan email Anda (Gmail opsional). Langsung mulai mengeksplorasi <strong>208 Modul Kuliah Kedokteran</strong> &amp; fitur AI lengkap dengan akun bersih terpisah.
   </p>
 </div>
 ''', unsafe_allow_html=True)
@@ -2825,15 +2849,22 @@ if "current_user" not in st.session_state or not st.session_state.current_user:
                         else:
                             st.error(f"⚠️ {msg}")
                             
-                # Google OAuth (Opsional / Localhost)
-                with st.expander("🌐 Opsi Masuk via Akun Google (Khusus Pemilik)", expanded=False):
-                    st.caption("Otorisasi Google OAuth resmi (memerlukan koneksi lokal/localhost).")
-                    if st.button("Masuk Akun Google (Localhost)", key="btn_g_official_instant", use_container_width=True):
-                        u_res, msg = authenticate_via_local_google_adc()
-                        if u_res:
-                            st.rerun()
-                        else:
-                            st.error(msg)
+                # Google OAuth / Akses Khusus Pemilik
+                if is_localhost_access():
+                    with st.expander("⚡ Akses Cepat Pemilik (dr. Dimas)", expanded=False):
+                        st.caption("Masuk instan menggunakan akun Google pemilik yang aktif di mesin lokal ini.")
+                        if st.button("⚡ Masuk Akun Pemilik (1-Klik)", key="btn_g_official_instant", use_container_width=True):
+                            u_res, msg = authenticate_via_local_google_adc()
+                            if u_res:
+                                st.rerun()
+                            else:
+                                st.error(msg)
+                else:
+                    st.markdown('''
+<div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; padding: 10px 12px; margin-top: 12px; font-size: 0.8rem; color: #94a3b8; text-align: center; line-height: 1.5;">
+  💡 <strong>Teman &amp; Rekan Penguji:</strong> Belum memiliki kata sandi? Silakan gunakan tab <strong style="color:#38bdf8;">"🧪 Penguji Cepat"</strong> di atas untuk langsung masuk tanpa sandi, atau buat akun baru di tab <strong style="color:#818cf8;">"✨ Daftar"</strong>.
+</div>
+''', unsafe_allow_html=True)
 
             # ── TAB 3: BELUM PUNYA AKUN (DAFTAR PERMANEN) ──
             with tab_reg:
@@ -2923,9 +2954,9 @@ with c_switch:
         st.caption(f"Akun aktif saat ini: {curr_label}")
         st.caption("Demi keamanan data berlangganan, silakan pilih metode autentikasi akun tujuan:")
         
-        # 1. Direct link to official Google OAuth to switch account
-        g_url_sw = get_official_google_auth_url()
-        st.markdown(f'''
+        if is_localhost_access():
+            g_url_sw = get_official_google_auth_url()
+            st.markdown(f'''
 <div style="margin-bottom: 10px;">
   <a href="{g_url_sw}" target="_self" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; background:#ffffff; color:#1f2937; border:1px solid #dadce0; padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.82rem; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
     <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
