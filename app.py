@@ -1,15 +1,23 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import fitz, google.generativeai as genai
-import json, datetime, html, re, time
+import json, datetime, html, re, time, math, os
 from pathlib import Path
 
 st.set_page_config(page_title="NeuroStudy", page_icon="🧠", layout="wide",
                    initial_sidebar_state="expanded")
-DATA_DIR = Path("data"); DATA_DIR.mkdir(exist_ok=True)
-FLASHCARD_DIR = DATA_DIR / "flashcards"; FLASHCARD_DIR.mkdir(exist_ok=True)
-DISCUSSION_DIR = DATA_DIR / "discussions"; DISCUSSION_DIR.mkdir(exist_ok=True)
-SESSION_DIR = DATA_DIR / "sessions"; SESSION_DIR.mkdir(exist_ok=True)
+
+DATA_DIR = Path("data")
+FLASHCARD_DIR = DATA_DIR / "flashcards"
+DISCUSSION_DIR = DATA_DIR / "discussions"
+SESSION_DIR = DATA_DIR / "sessions"
+
+@st.cache_resource
+def _ensure_core_directories():
+    for d in [DATA_DIR, FLASHCARD_DIR, DISCUSSION_DIR, SESSION_DIR]:
+        d.mkdir(parents=True, exist_ok=True)
+    return True
+_ensure_core_directories()
 
 CONFIG_FILE = DATA_DIR / "config.json"
 
@@ -21,6 +29,20 @@ def load_config():
 
 def save_config(cfg_dict):
     CONFIG_FILE.write_text(json.dumps(cfg_dict, ensure_ascii=False, indent=2))
+
+def get_gemini_api_key():
+    saved_cfg = load_config()
+    saved_key = saved_cfg.get("api_key", "").strip()
+    if saved_key:
+        return saved_key
+    try:
+        if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+            return st.secrets["GEMINI_API_KEY"]
+        elif hasattr(st, "secrets") and "api_key" in st.secrets:
+            return st.secrets["api_key"]
+    except Exception:
+        pass
+    return os.environ.get("GEMINI_API_KEY", "")
 
 # ── THEME STATE (OBSIDIAN NIGHT VS CLINICAL APPLE WHITE) ──────────────────────
 if "app_theme" not in st.session_state:
@@ -72,6 +94,7 @@ input, textarea, [data-baseweb="select"] {
 st.markdown(f"""
 <style>
 {theme_css}
+</style>
 """, unsafe_allow_html=True)
 
 st.markdown(r"""
@@ -655,7 +678,17 @@ def clear_persisted_auth_session():
 
 # ── USER AUTHENTICATION & ADVANCED SECURITY LAYER ─────────────────────────────
 USERS_DB_FILE = DATA_DIR / "users_db.json"
-LOGIN_ATTEMPTS = {}  # {identifier: [timestamp, count]}
+LOGIN_ATTEMPTS_FILE = DATA_DIR / "login_attempts.json"
+
+def get_login_attempts():
+    if LOGIN_ATTEMPTS_FILE.exists():
+        try: return json.loads(LOGIN_ATTEMPTS_FILE.read_text())
+        except Exception: return {}
+    return {}
+
+def save_login_attempts(attempts):
+    try: atomic_write_json(LOGIN_ATTEMPTS_FILE, attempts)
+    except Exception: pass
 
 def hash_user_password(pw, salt=None):
     import hashlib, secrets
@@ -780,9 +813,15 @@ def login_or_register_google_account(email, display_name=None):
     return new_user_data, "OK"
 
 # ── OFFICIAL GOOGLE OAUTH 2.0 & IDENTITY AUTHORIZATION ENGINE ─────────────────
-GOOGLE_OAUTH_CLIENT_ID = "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com"
-GOOGLE_OAUTH_CLIENT_SECRET = "d-FL95Q19q7MQmFpd7hHD0Ty"
-GOOGLE_OAUTH_REDIRECT_URI = "http://localhost:8501"
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or (
+    st.secrets.get("GOOGLE_OAUTH_CLIENT_ID") if hasattr(st, "secrets") and "GOOGLE_OAUTH_CLIENT_ID" in st.secrets else "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com"
+)
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or (
+    st.secrets.get("GOOGLE_OAUTH_CLIENT_SECRET") if hasattr(st, "secrets") and "GOOGLE_OAUTH_CLIENT_SECRET" in st.secrets else "d-FL95Q19q7MQmFpd7hHD0Ty"
+)
+GOOGLE_OAUTH_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH_REDIRECT_URI") or (
+    st.secrets.get("GOOGLE_OAUTH_REDIRECT_URI") if hasattr(st, "secrets") and "GOOGLE_OAUTH_REDIRECT_URI" in st.secrets else "http://localhost:8501"
+)
 
 def get_official_google_auth_url():
     """Menghasilkan URL otorisasi resmi Google OAuth 2.0."""
@@ -809,11 +848,11 @@ def handle_google_oauth_code_exchange():
                 "client_secret": GOOGLE_OAUTH_CLIENT_SECRET,
                 "redirect_uri": GOOGLE_OAUTH_REDIRECT_URI,
                 "grant_type": "authorization_code"
-            })
+            }, timeout=15)
             token_json = r.json()
             acc_tok = token_json.get("access_token")
             if acc_tok:
-                u_res = requests.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {acc_tok}"})
+                u_res = requests.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {acc_tok}"}, timeout=15)
                 u_info = u_res.json()
                 email = u_info.get("email")
                 if email and u_info.get("email_verified", True):
@@ -840,7 +879,6 @@ def handle_google_oauth_code_exchange():
 def authenticate_via_local_google_adc():
     """Otorisasi instan menggunakan kredensial Google OAuth resmi yang aktif di sistem."""
     import requests, json
-    from pathlib import Path
     adc_path = Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
     if adc_path.exists():
         try:
@@ -854,14 +892,16 @@ def authenticate_via_local_google_adc():
                     "client_secret": c_sec,
                     "refresh_token": r_tok,
                     "grant_type": "refresh_token"
-                })
+                }, timeout=15)
                 token_data = r.json()
                 acc_tok = token_data.get("access_token")
                 if acc_tok:
-                    u_r = requests.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {acc_tok}"})
+                    u_r = requests.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {acc_tok}"}, timeout=15)
                     u_info = u_r.json()
-                    email = u_info.get("email", "mahesawastu8@gmail.com")
-                    name = u_info.get("name") or "Dimas Wastu Mahesa"
+                    email = u_info.get("email")
+                    if not email:
+                        return None, "Kredensial Google lokal tidak menyertakan email valid."
+                    name = u_info.get("name") or email.split("@")[0].capitalize()
                     pic = u_info.get("picture", "")
                     u_data, msg = login_or_register_google_account(email, display_name=name)
                     if u_data:
@@ -883,21 +923,22 @@ def authenticate_via_local_google_adc():
 
 
 def authenticate_user(login_identifier, password):
-    import time
     ident = (login_identifier or "").strip().lower()
     pw = (password or "").strip()
     if not ident or not pw:
         return None, "Harap masukkan email/username dan kata sandi."
     
-    # Rate limiting check (max 5 failed attempts in 60s)
+    # Persistent Rate limiting check (max 5 failed attempts in 60s)
     now = time.time()
-    if ident in LOGIN_ATTEMPTS:
-        first_time, count = LOGIN_ATTEMPTS[ident]
+    attempts = get_login_attempts()
+    if ident in attempts:
+        first_time, count = attempts[ident]
         if count >= 5 and (now - first_time) < 60:
             remaining = int(60 - (now - first_time))
             return None, f"Terlalu banyak percobaan login gagal. Silakan tunggu {remaining} detik demi keamanan akun."
         elif (now - first_time) >= 60:
-            LOGIN_ATTEMPTS[ident] = [now, 0]
+            attempts[ident] = [now, 0]
+            save_login_attempts(attempts)
             
     users = load_users()
     matched_user = None
@@ -907,10 +948,11 @@ def authenticate_user(login_identifier, password):
             break
             
     if not matched_user:
-        if ident not in LOGIN_ATTEMPTS:
-            LOGIN_ATTEMPTS[ident] = [now, 1]
+        if ident not in attempts:
+            attempts[ident] = [now, 1]
         else:
-            LOGIN_ATTEMPTS[ident][1] += 1
+            attempts[ident][1] += 1
+        save_login_attempts(attempts)
         return None, "Email/Username atau Kata Sandi tidak cocok."
         
     stored_hash = matched_user.get("password_hash", "")
@@ -921,14 +963,17 @@ def authenticate_user(login_identifier, password):
         
     # Strictly verify cryptographic PBKDF2 hash
     if verify_user_password(pw, stored_hash):
-        LOGIN_ATTEMPTS.pop(ident, None)
+        if ident in attempts:
+            attempts.pop(ident, None)
+            save_login_attempts(attempts)
         ensure_user_has_materials(matched_user["username"])
         return matched_user, "OK"
     else:
-        if ident not in LOGIN_ATTEMPTS:
-            LOGIN_ATTEMPTS[ident] = [now, 1]
+        if ident not in attempts:
+            attempts[ident] = [now, 1]
         else:
-            LOGIN_ATTEMPTS[ident][1] += 1
+            attempts[ident][1] += 1
+        save_login_attempts(attempts)
         return None, "Email/Username atau Kata Sandi tidak cocok."
 
 def register_user(display_name, email, password, confirm_password=None):
@@ -1034,7 +1079,13 @@ COGNITIVE_LEVELS = {
 
 # ── SUBSCRIPTION, BILLING & QUOTA MANAGEMENT ENGINE ───────────────────────────
 def get_user_subscription_status(username=None):
-    u = username or st.session_state.get("current_user", "dimas")
+    u = username or st.session_state.get("current_user")
+    if not u:
+        return {
+            "tier": "free", "is_pro": False, "days_left": 0,
+            "status_label": "Free Plan", "can_upload": True, "max_mats": 10,
+            "plan_name": "Free Plan"
+        }
     users = load_users()
     udata = users.get(str(u), {})
     
@@ -1235,8 +1286,8 @@ def clean_academic_text(raw_text):
 
 def pdf_text(f): return "".join(p.get_text() for p in fitz.open(stream=f.read(), filetype="pdf"))
 
-def save_mat(name, text):
-    m_path = get_user_root() / "materials" / f"{name}.json"
+def save_mat(name, text, username=None):
+    m_path = get_user_root(username) / "materials" / f"{name}.json"
     m_path.write_text(json.dumps({
         "name": name, "text": text,
         "uploaded_at": datetime.datetime.now().isoformat(),
@@ -1244,9 +1295,9 @@ def save_mat(name, text):
         "review_count": 0, "ease_factor": 2.5, "sessions": 0
     }, ensure_ascii=False, indent=2))
 
-def load_mats():
+def load_mats(username=None):
     out = {}
-    m_dir = get_user_root() / "materials"
+    m_dir = get_user_root(username) / "materials"
     if not m_dir.exists(): return out
     for f in m_dir.glob("*.json"):
         try:
@@ -1254,16 +1305,17 @@ def load_mats():
             m_name = d.get("name") or d.get("title") or f.stem
             d["name"] = m_name
             out[m_name] = d
-        except: pass
+        except Exception: pass
     return out
 
 def update_sr(name, q):
     path = get_user_root() / "materials" / f"{name}.json"
     d = json.loads(path.read_text())
-    ef = max(1.3, d["ease_factor"] + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
-    c = d["review_count"]
+    ef = max(1.3, d.get("ease_factor", 2.5) + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+    c = d.get("review_count", 0)
     iv = 1 if q < 3 or c == 0 else (6 if c == 1 else round(d.get("last_interval", 6) * ef))
-    d.update({"ease_factor": ef, "review_count": c + 1, "last_interval": iv, "sessions": d.get("sessions", 0) + 1,
+    new_c = 0 if q < 3 else c + 1
+    d.update({"ease_factor": ef, "review_count": new_c, "last_interval": iv, "sessions": d.get("sessions", 0) + 1,
               "next_review": (datetime.datetime.now() + datetime.timedelta(days=iv)).isoformat()})
     path.write_text(json.dumps(d, ensure_ascii=False, indent=2)); return iv
 
@@ -1454,7 +1506,7 @@ def sync_gdrive_folder_recursive(root_id):
     save_gdrive_index(index_data)
     return index_data
 
-def download_and_import_gdrive_slide(file_id, file_name, api_key):
+def download_and_import_gdrive_slide(file_id, file_name, api_key, username=None):
     """
     Mengunduh file slide dari Google Drive, mengekstrak teks (PDF atau PPTX), dan menyimpannya ke database materi.
     """
@@ -1487,7 +1539,7 @@ def download_and_import_gdrive_slide(file_id, file_name, api_key):
                     except Exception: pass
 
             if len(all_text.strip()) > 30:
-                save_mat(file_name, all_text)
+                save_mat(file_name, all_text, username=username)
                 return True, len(all_text)
             return False, "Dokumen kosong atau tidak memiliki teks yang terbaca."
         return False, f"Gagal mengunduh file (HTTP {resp.status_code})"
@@ -1496,16 +1548,17 @@ def download_and_import_gdrive_slide(file_id, file_name, api_key):
 
 
 # ── AUTO-DOWNLOAD & SYNC DAEMON UNTUK FOLDER BLOK DOSEN ───────────────────────
-def check_and_auto_download_blok_updates():
+def check_and_auto_download_blok_updates(username=None):
     """
     Otomatis memeriksa dan mengunduh seluruh materi baru di folder BLOK secara rekursif
     sehingga mahasiswa selalu memiliki slide kuliah paling mutakhir.
     """
     import threading
+    target_user = username or st.session_state.get("current_user", "dimas")
     
-    def _run_bg():
+    def _run_bg(t_user):
         try:
-            user_mats = load_mats()
+            user_mats = load_mats(username=t_user)
             blok_folder_ids = [
                 ("BMS 1", "1GFFIxSHGjGf1B3nq4kSJwQ4QMj_qbRm3"),
                 ("BUAMS", "1mRMtfuraC0HueVl-4LTzXhSpinj1C6CD"),
@@ -1529,13 +1582,13 @@ def check_and_auto_download_blok_updates():
                             c_name = f"[{b_name}] {it['name']}".strip()
                             clean_target = re.sub(r'\.(pdf|pptx|ppt|docx|txt)$', '', c_name, flags=re.IGNORECASE).strip()
                             if clean_target not in user_mats:
-                                download_and_import_gdrive_slide(it['id'], clean_target, "")
+                                download_and_import_gdrive_slide(it['id'], clean_target, "", username=t_user)
 
             for b_name, b_id in blok_folder_ids:
                 scan_and_download(b_id, b_name, 0)
         except Exception: pass
         
-    t = threading.Thread(target=_run_bg, daemon=True)
+    t = threading.Thread(target=_run_bg, args=(target_user,), daemon=True)
     t.start()
 
 # ── GOOGLE DRIVE & GOOGLE SLIDES DIRECT IMPORT ENGINE ─────────────────────────
@@ -1853,16 +1906,21 @@ def render_flashcards_widget(mat_name, text, api_key, phase_tag="ALL", key_prefi
         with st.spinner("AI sedang merancang flashcards tambahan..."):
             count = generate_flashcards_ai(api_key, text, phase_tag, mat_name)
             if count > 0:
-                st.success(f"✅ {count} kartu baru ditambahkan ke koleksi!")
+                st.toast(f"✅ {count} kartu baru ditambahkan ke koleksi!", icon="🃏")
                 st.session_state[idx_key] = len(filtered)
                 st.session_state[rev_key] = False
                 st.rerun()
 # ── EVIDENCE-BASED PARETO 80/20 & COLLECTIVE PEER CACHING LAYER ───────────────
 GLOBAL_LIB_DIR = DATA_DIR / "global_library"
-GLOBAL_LIB_DIR.mkdir(exist_ok=True)
-(GLOBAL_LIB_DIR / "master_notes").mkdir(exist_ok=True)
-(GLOBAL_LIB_DIR / "active_recall").mkdir(exist_ok=True)
-(GLOBAL_LIB_DIR / "exam_simulations").mkdir(exist_ok=True)
+
+@st.cache_resource
+def _ensure_global_lib_dirs():
+    GLOBAL_LIB_DIR.mkdir(parents=True, exist_ok=True)
+    (GLOBAL_LIB_DIR / "master_notes").mkdir(exist_ok=True)
+    (GLOBAL_LIB_DIR / "active_recall").mkdir(exist_ok=True)
+    (GLOBAL_LIB_DIR / "exam_simulations").mkdir(exist_ok=True)
+    return True
+_ensure_global_lib_dirs()
 
 def get_cached_master_note(mat_name):
     safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', mat_name)
@@ -2691,9 +2749,6 @@ if "current_user" not in st.session_state or not st.session_state.current_user:
         if st.button(t_lbl, key="landing_theme_toggle", use_container_width=True):
             new_th = "clinical_white" if is_obsidian else "obsidian"
             st.session_state.app_theme = new_th
-            cfg_tmp = load_config()
-            cfg_tmp["app_theme"] = new_th
-            save_config(cfg_tmp)
             st.rerun()
 
     # Centered Minimalist Authentication Card (Modern Web Style)
@@ -2713,10 +2768,8 @@ if "current_user" not in st.session_state or not st.session_state.current_user:
             # ── TAB 1: MASUK PENGUJI INSTAN (UNTUK TEMAN-TEMAN TESTER) ──
             with tab_guest:
                 st.markdown('''
-<div style="text-align:center; margin: 4px 0 16px;">
-  <span style="display:inline-block; font-size:0.75rem; font-weight:700; color:#818cf8; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.25); padding:3px 12px; border-radius:20px; letter-spacing:0.3px;">
-    🧪 AKSES SEJAWAT · TANPA PASSWORD
-  </span>
+<div style="padding:4px 0 12px; text-align:center;">
+  <div style="font-weight:700; color:#38bdf8; font-size:0.95rem;">Akses Cepat Penguji Beta</div>
   <p style="font-size:0.8rem; color:#94a3b8; line-height:1.5; margin:8px auto 0; max-width:92%;">
     Ketik nama Anda untuk langsung mengeksplorasi <strong>208 Modul Kuliah Kedokteran</strong> &amp; fitur AI lengkap.
   </p>
@@ -2737,7 +2790,8 @@ if "current_user" not in st.session_state or not st.session_state.current_user:
                                 st.session_state.current_user = u_res["username"]
                                 st.session_state.user_info = u_res
                                 set_persisted_auth_session(u_res)
-                                st.toast(f"✓ Selamat datang, {u_res.get('display_name')}! Akses 208 modul siap.", icon="🟢")
+                                disp_n = u_res.get('display_name') or u_res.get('username', 'Dokter')
+                                st.toast(f"✓ Selamat datang, {disp_n}! Akses 208 modul siap.", icon="🟢")
                                 st.rerun()
                             else:
                                 st.error(f"⚠️ {msg}")
@@ -2807,25 +2861,19 @@ if "current_user" not in st.session_state or not st.session_state.current_user:
     st.stop()
 
 # ── PERSISTENT CONFIG & MATERIAL LOADING ──────────────────────────────────────
-saved_cfg = load_config()
-saved_key = saved_cfg.get("api_key", "").strip()
-api_key = saved_key
-if not api_key:
-    try:
-        if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
-            api_key = st.secrets["GEMINI_API_KEY"]
-        elif hasattr(st, "secrets") and "api_key" in st.secrets:
-            api_key = st.secrets["api_key"]
-    except: pass
-
+api_key = get_gemini_api_key()
 mats = load_mats()
 
 # ── EXECUTIVE TOP BAR (CLEAN CLINICAL INTERFACE) ──────────────────────────────
 cur_u = st.session_state.get("user_info", {})
 u_disp = (cur_u.get("display_name") or cur_u.get("username", "Dokter")).title()
-u_mail = cur_u.get("email", "dimaswastumahesa@gmail.com")
+u_mail = cur_u.get("email", "")
 u_pic = cur_u.get("picture")
-is_owner = any(k in (u_mail or "").lower() or k in (cur_u.get("username") or "").lower() for k in ["dimas", "wastu", "mahesawastu8@gmail.com"])
+is_owner = bool(
+    (u_mail and any(k in u_mail.lower() for k in ["dimaswastumahesa@gmail.com", "mahesawastu8@gmail.com"])) or
+    (cur_u.get("username") in ["dimas", "dimaswastu", "dimaswastumahesa"])
+)
+st.session_state.is_owner = is_owner
 
 c_brand, c_user, c_switch, c_theme, c_logout = st.columns([2.8, 3.2, 1.4, 1.4, 1.1], vertical_alignment="center")
 
@@ -2846,23 +2894,25 @@ with c_user:
     else:
         avatar_elem = f'<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 75%, #EA4335 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;flex-shrink:0;">{u_disp[:1].upper()}</div>'
 
+    email_badge = f"<span>● {u_mail}</span>" if u_mail else "<span>● Penguji Tamu</span>"
     st.markdown(f'''
 <div style="display:flex;align-items:center;gap:10px;background:rgba(30,41,59,0.7);border:1px solid rgba(255,255,255,0.08);padding:6px 14px;border-radius:12px;">
   {avatar_elem}
   <div style="line-height:1.2;overflow:hidden;flex:1;">
     <div style="font-size:0.84rem;font-weight:800;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;">{u_disp}</div>
     <div style="font-size:0.68rem;color:#34d399;font-weight:700;display:flex;align-items:center;gap:4px;">
-      <span>● Google: {u_mail}</span>
+      {email_badge}
     </div>
   </div>
-  <span style="background:rgba(16,185,129,0.15);color:#34d399;font-size:0.62rem;padding:2px 6px;border-radius:6px;font-weight:800;">GOOGLE RESMI ✓</span>
+  <span style="background:rgba(16,185,129,0.15);color:#34d399;font-size:0.62rem;padding:2px 6px;border-radius:6px;font-weight:800;">TERVERIFIKASI ✓</span>
 </div>
 ''', unsafe_allow_html=True)
 
 with c_switch:
     with st.popover("🔄 Switch Akun", use_container_width=True):
         st.markdown("#### 🔄 Ganti Akun")
-        st.caption(f"Akun aktif saat ini: **{u_disp}** ({u_mail})")
+        curr_label = f"**{u_disp}** ({u_mail})" if u_mail else f"**{u_disp}**"
+        st.caption(f"Akun aktif saat ini: {curr_label}")
         st.caption("Demi keamanan data berlangganan, silakan pilih metode autentikasi akun tujuan:")
         
         # 1. Direct link to official Google OAuth to switch account
@@ -2890,9 +2940,12 @@ with c_theme:
     if st.button(theme_label, help=theme_help, use_container_width=True, key="btn_theme_toggle"):
         new_th = "clinical_white" if is_obsidian else "obsidian"
         st.session_state.app_theme = new_th
-        cfg_tmp = load_config()
-        cfg_tmp["app_theme"] = new_th
-        save_config(cfg_tmp)
+        curr_uname = st.session_state.get("current_user")
+        if curr_uname:
+            db = load_users()
+            if curr_uname in db:
+                db[curr_uname]["app_theme"] = new_th
+                save_users(db)
         st.rerun()
 
 with c_logout:
@@ -3108,9 +3161,10 @@ def render_sub_cloud_library():
                 
                 # Clean Action Row (Main Action + Quick Power Tools Popover)
                 c_act_main, c_act_tools = st.columns([3.0, 1.0], vertical_alignment="center")
+                safe_k = re.sub(r'[^a-zA-Z0-9_]', '_', nm)
                 with c_act_main:
                     btn_label = f"🚀 Lanjut ({nm[:18]}…)" if has_studied else f"🚀 Mulai Belajar ({nm[:18]}…)"
-                    if st.button(btn_label, type="primary", use_container_width=True, key=f"btn_start_sesi_{nm[:20]}_{idx_item}"):
+                    if st.button(btn_label, type="primary", use_container_width=True, key=f"btn_start_sesi_{safe_k}"):
                         st.session_state.mat_sel = nm
                         st.session_state.selected_notify = nm
                         for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
@@ -3123,15 +3177,15 @@ def render_sub_cloud_library():
                 with c_act_tools:
                     with st.popover("⚡ Fitur", use_container_width=True):
                         st.markdown(f"**⚡ Power Tools: {nm[:22]}...**")
-                        if st.button("🎯 Bedah Jebakan Ujian", key=f"btn_v_{nm[:20]}_{idx_item}", use_container_width=True):
+                        if st.button("🎯 Bedah Jebakan Ujian", key=f"btn_v_{safe_k}", use_container_width=True):
                             with st.spinner("Dr. Marcus Vance sedang membedah jebakan..."):
                                 prompt_v = f"Kamu adalah Dr. Marcus Vance, Sp.FK. Bedah 3 jebakan soal pilihan ganda paling mematikan pada materi: {md.get('text','')[:7000]}"
-                                st.markdown(stream_ai_transparent(api_key, prompt_v, st.empty()))
-                        if st.button("🩺 Kasus Klinis IGD", key=f"btn_t_{nm[:20]}_{idx_item}", use_container_width=True):
+                                stream_ai_transparent(api_key, prompt_v, st.empty())
+                        if st.button("🩺 Kasus Klinis IGD", key=f"btn_t_{safe_k}", use_container_width=True):
                             with st.spinner("Dr. Aris Thorne menyiapkan simulasi IGD..."):
                                 prompt_t = f"Kamu adalah Dr. Aris Thorne, Sp.PD. Buat 1 simulasi kasus pasien darurat di IGD berdasarkan materi ini: {md.get('text','')[:7000]}"
-                                st.markdown(stream_ai_transparent(api_key, prompt_t, st.empty()))
-                        if st.button("📄 Medical Cheat Sheet", key=f"btn_cs_{nm[:20]}_{idx_item}", use_container_width=True):
+                                stream_ai_transparent(api_key, prompt_t, st.empty())
+                        if st.button("📄 Medical Cheat Sheet", key=f"btn_cs_{safe_k}", use_container_width=True):
                             with st.spinner("Menyusun Cheat Sheet..."):
                                 cs_p = f"""Buat RANGKUMAN EKSEKUTIF 1 HALAMAN (Medical Cheat Sheet) yang sangat padat, terstruktur, dan siap cetak dari materi ini:
 Materi:
@@ -3142,7 +3196,7 @@ Format WAJIB:
 2. **📊 Tabel Obat / Klasifikasi:** (Golongan, Contoh, Efek Utama, Efek Samping Kritis)
 3. **⚠️ 3 Aturan Emas Klinis:** (Peringatan penting di ranjang pasien)
 4. **💡 Mnemonik Klinis:** (Cara cepat mengingat fakta rumit)"""
-                                st.markdown(stream_ai_transparent(api_key, cs_p, st.empty()))
+                                stream_ai_transparent(api_key, cs_p, st.empty())
                         cards = load_flashcards(nm)
                         if cards:
                             st.download_button(
@@ -3150,6 +3204,7 @@ Format WAJIB:
                                 data=generate_anki_export_data(cards, nm),
                                 file_name=f"{nm}_anki.txt",
                                 mime="text/plain",
+                                key=f"dl_anki_{safe_k}",
                                 use_container_width=True
                             )
 
@@ -3161,6 +3216,7 @@ Format WAJIB:
             st.markdown("##### 📤 Upload File Mandiri (.pptx, .pdf, .docx):")
             up_man = st.file_uploader("Pilih file dari komputer:", type=["pdf", "pptx", "ppt", "docx", "txt"], accept_multiple_files=True, key="manual_up_file")
             if up_man:
+                added_any = False
                 for f in up_man:
                     cl_n = re.sub(r'\.(pdf|pptx|ppt|docx|txt)$', '', f.name, flags=re.IGNORECASE).strip()
                     if cl_n not in mats:
@@ -3169,7 +3225,9 @@ Format WAJIB:
                             if len(ext_txt.strip()) > 30:
                                 save_mat(cl_n, ext_txt)
                                 st.success(f"✓ Berhasil ditambahkan: {cl_n}")
-                                st.rerun()
+                                added_any = True
+                if added_any:
+                    st.rerun()
         with c_up_m2:
             st.markdown("##### 📦 Backup & Pemulihan Database:")
             zip_dat = create_backup_zip()
@@ -3448,7 +3506,7 @@ def render_sub_specialist_council():
             import hashlib
             disc_hash_key = hashlib.md5(f"{sel_agent_k}_".join(sorted(plugged)).encode("utf-8")).hexdigest()[:12]
             disc_storage_name = f"agent_{sel_agent_k}_{disc_hash_key}"
-            if st.button("🗑️ Reset Chat", use_container_width=True, help="Kosongkan riwayat chat dengan spesialis ini"):
+            if st.button("🗑️ Reset Chat", key=f"btn_reset_chat_{disc_storage_name}", use_container_width=True, help="Kosongkan riwayat chat dengan spesialis ini"):
                 save_discussion(disc_storage_name, [])
                 st.rerun()
 
@@ -3678,7 +3736,8 @@ def render_sub_beta_tester():
         with c_sh2:
             if st.button("🚀 Nyalakan / Segarkan Tunnel", key="btn_refresh_tunnel", use_container_width=True, help="Menjalankan script tunneling jika tautan belum aktif"):
                 import subprocess
-                subprocess.Popen(["bash", "/Users/dimaswastu/study-demo-env/start_share.sh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                tunnel_script = str(Path(__file__).parent / "start_share.sh")
+                subprocess.Popen(["bash", tunnel_script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 st.success("Perintah penyegaran dikirim! Tunggu 5-10 detik lalu refresh halaman.")
                 time.sleep(1)
                 st.rerun()
@@ -3828,7 +3887,8 @@ Setelah mencoba, tolong beri masukan di tab "Uji Coba & Feedback Beta" ya. Terim
 
 
 def render_tab_belajar():
-
+    api_key = get_gemini_api_key()
+    is_owner = st.session_state.get("is_owner", False)
     mats = load_mats()
 
     # ── LEARNING MODE TOGGLE: PARETO 80/20 (DEFAULT) VS FAST-TRACK VS 6-PHASE ──
@@ -3916,7 +3976,7 @@ def render_tab_belajar():
         with c_t2_rst:
             if st.button("🔄 Reset", use_container_width=True, help="Reset sesi belajar materi ini"):
                 clear_active_session(sel)
-                st.session_state.phase = 0; st.session_state.phase_data = {}; st.session_state.completed = False; st.session_state.history = []; st.session_state.scores = {}; st.session_state.session_started = False; st.rerun()
+                st.session_state.phase = 0; st.session_state.phase_data = {}; st.session_state.completed = False; st.session_state.history = []; st.session_state.scores = {}; st.session_state.session_started = False; st.session_state.post_chat = []; st.rerun()
 
         if sel != st.session_state.get("mat_sel"):
             st.session_state.mat_sel = sel
@@ -3928,15 +3988,16 @@ def render_tab_belajar():
                 st.session_state.history = saved_s.get("history", [])
                 st.session_state.scores = saved_s.get("scores", {})
                 st.session_state.session_started = saved_s.get("session_started", False)
+                st.session_state.post_chat = saved_s.get("post_chat", [])
             else:
-                st.session_state.phase = 0; st.session_state.phase_data = {}; st.session_state.completed = False; st.session_state.history = []; st.session_state.scores = {}; st.session_state.session_started = False
+                st.session_state.phase = 0; st.session_state.phase_data = {}; st.session_state.completed = False; st.session_state.history = []; st.session_state.scores = {}; st.session_state.session_started = False; st.session_state.post_chat = []
 
         raw_text = load_mats()[sel].get("text", "")
         text = clean_academic_text(raw_text)
         mat_info = load_mats()[sel]
 
         # ── CEK MODE DARURAT UJIAN (FAST TRACK H-1) ──
-        if st.session_state.get("study_mode") == "⚡ Mode Darurat H-1 Ujian (Fast Track)":
+        if st.session_state.get("study_mode") == "⚡ Mode Darurat H-1 Ujian":
             st.markdown(f'''
 <div style="background:linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(245,158,11,0.08) 100%);border:1.5px solid rgba(239,68,68,0.4);border-radius:14px;padding:18px 22px;margin:16px 0 20px;">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
@@ -4500,7 +4561,8 @@ Materi:
   </div>
 </div>
 """, unsafe_allow_html=True)
-            if st.button("🚀 Mulai Sesi Belajar Sekarang →", type="primary", use_container_width=True, key="start_session_btn"):
+            safe_sel_start = re.sub(r'[^a-zA-Z0-9_]', '_', sel)
+            if st.button("🚀 Mulai Sesi Belajar Sekarang →", type="primary", use_container_width=True, key=f"start_session_btn_{safe_sel_start}"):
                 st.session_state.session_started = True
                 st.rerun()
         else:
@@ -4618,9 +4680,11 @@ Format Markdown:
 """, unsafe_allow_html=True)
                 
                 st.divider()
+                safe_sel_post = re.sub(r'[^a-zA-Z0-9_]', '_', sel)
                 quality = st.select_slider("Nilai kemampuan recall keseluruhan sesi ini:", options=[0, 1, 2, 3, 4, 5], value=4,
+                    key=f"sr_quality_slider_{safe_sel_post}",
                     format_func=lambda x: {0: "0 — Sama sekali lupa", 1: "1 — Banyak yang salah", 2: "2 — Ingat setelah dibantu", 3: "3 — Sebagian besar ingat", 4: "4 — Hampir sempurna", 5: "5 — Sempurna!"}[x])
-                if st.button("📅 Simpan & Jadwalkan Review Spaced Repetition", type="primary", use_container_width=True, key="save_sr_btn"):
+                if st.button("📅 Simpan & Jadwalkan Review Spaced Repetition", type="primary", use_container_width=True, key=f"save_sr_btn_{safe_sel_post}"):
                     iv = update_sr(sel, quality)
                     msg = "🎉 Luar biasa!" if quality >= 4 else "📚 Terus berlatih!"
                     (st.success if quality >= 4 else st.warning)(f"{msg} Review berikutnya dijadwalkan dalam **{iv} hari** (SM-2 Spaced Repetition Algorithm).")
@@ -4640,14 +4704,17 @@ Format Markdown:
 </div>
 """, unsafe_allow_html=True)
                 
+                if "post_chat" not in st.session_state or not isinstance(st.session_state.post_chat, list):
+                    st.session_state.post_chat = []
+
                 for chat_m in st.session_state.post_chat:
                     if chat_m["role"] == "user":
                         st.markdown(f'<div class="msg-user">🙋‍♂️ <strong>Pertanyaan Anda:</strong><br/>{html.escape(chat_m["content"])}</div>', unsafe_allow_html=True)
                     else:
                         st.markdown(f'<div class="msg-ai"><div class="ai-row"><div class="ai-dot">AI</div><span style="font-size:.75rem;color:#818cf8;font-weight:600;">NeuroStudy Pakar Riset Medis</span></div>\n\n{chat_m["content"]}\n</div>', unsafe_allow_html=True)
                 
-                with st.form(key="post_chat_form", clear_on_submit=True):
-                    q_post = st.text_area("Tanyakan area abu-abu atau topik penelitian medis disini:", placeholder="Contoh: Mengapa pada kondisi klinis tertentu obat ini memiliki efek paradoksal, dan bagaimana penjelasan penelitian molekulernya?", height=90, key="post_q_input")
+                with st.form(key=f"post_chat_form_{safe_sel_post}", clear_on_submit=True):
+                    q_post = st.text_area("Tanyakan area abu-abu atau topik penelitian medis disini:", placeholder="Contoh: Mengapa pada kondisi klinis tertentu obat ini memiliki efek paradoksal, dan bagaimana penjelasan penelitian molekulernya?", height=90, key=f"post_q_input_{safe_sel_post}")
                     st.markdown('<div style="font-size:0.75rem;color:#64748b;margin:-6px 0 10px;">⌨️ Tekan <strong>Enter</strong> untuk langsung kirim pertanyaan (Gunakan <em>Shift + Enter</em> untuk baris baru).</div>', unsafe_allow_html=True)
                     btn_ask = st.form_submit_button("🔬 Tanyakan & Validasi Ilmiah →", type="primary", use_container_width=True)
                     
@@ -4830,8 +4897,8 @@ Materi:\n{text}"""
                     with c_opt1:
                         with st.expander("📋 Lihat Struktur Outline / Teks Lengkap", expanded=False):
                             st.markdown(map_md)
-                    with c_opt2:
-                        if st.button("🔄 Buat Ulang Map", use_container_width=True):
+                        safe_sel_map = re.sub(r'[^a-zA-Z0-9_]', '_', sel)
+                        if st.button("🔄 Buat Ulang Map", key=f"btn_regen_map_phase2_{safe_sel_map}", use_container_width=True):
                             del st.session_state.phase_data["map_md"]
                             st.rerun()
 
@@ -4989,7 +5056,7 @@ Format analisis:
 
 {text[:10000]}""", st.empty())
                             if more_q:
-                                st.session_state.phase_data["recall_q"] += f"\n\n{more_q}"
+                                st.session_state.phase_data["recall_q"] = st.session_state.phase_data.get("recall_q", "") + f"\n\n{more_q}"
                                 st.rerun()
                 with c_r1:
                     if "recall_q" not in st.session_state.phase_data:
@@ -5059,7 +5126,7 @@ Format feedback:
 
 {text[:8000]}""", st.empty())
                             if more_t:
-                                st.session_state.phase_data["topics"] += f"\n\n{more_t}"
+                                st.session_state.phase_data["topics"] = st.session_state.phase_data.get("topics", "") + f"\n\n{more_t}"
                                 st.rerun()
                 with c_t1:
                     if "topics" not in st.session_state.phase_data:
@@ -5275,7 +5342,12 @@ components.html("""
   }
   
   setupEnter();
-  setInterval(setupEnter, 300);
+  try {
+    const observer = new MutationObserver(() => { setupEnter(); });
+    observer.observe(window.parent.document.body, { childList: true, subtree: true });
+  } catch(e) {
+    setInterval(setupEnter, 1000);
+  }
 })();
 </script>
 """, height=0, width=0)
