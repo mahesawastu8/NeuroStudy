@@ -742,16 +742,24 @@ def get_user_root(username=None):
     return p
 
 def ensure_user_has_materials(username):
-    """Memastikan direktori user memiliki 208 materi kuliah kedokteran & starter flashcards."""
+    """Memastikan direktori user memiliki 208 materi kuliah kedokteran & starter flashcards secara instan tanpa download."""
     try:
         user_root = get_user_root(username)
         dest_dir = user_root / "materials"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Priority 1: Instant master materials cache (zero download, zero delay)
+        master_dir = DATA_DIR / "master_materials"
         source_dir = None
-        for cand in ["dimaswastumahesa", "dimas", "dimaswastu"]:
-            cdir = DATA_DIR / "users" / cand / "materials"
-            if cdir.exists() and len(list(cdir.glob("*.json"))) >= 200:
-                source_dir = cdir
-                break
+        if master_dir.exists() and len(list(master_dir.glob("*.json"))) >= 200:
+            source_dir = master_dir
+        else:
+            for cand in ["dimas", "dimaswastu", "dimaswastumahesa"]:
+                cdir = DATA_DIR / "users" / cand / "materials"
+                if cdir.exists() and len(list(cdir.glob("*.json"))) >= 200:
+                    source_dir = cdir
+                    break
+                    
         if source_dir and dest_dir.resolve() != source_dir.resolve():
             dest_count = len(list(dest_dir.glob("*.json")))
             source_count = len(list(source_dir.glob("*.json")))
@@ -773,6 +781,7 @@ def ensure_user_has_materials(username):
                 if not tf.exists():
                     shutil.copy2(f, tf)
     except Exception:
+        pass
         pass
 
 def login_or_register_google_account(email, display_name=None):
@@ -3015,37 +3024,41 @@ def render_sub_cloud_library():
                             st.session_state.t2_blok_selector = b
                             break
                     st.session_state.session_started = True
+                    st.session_state.switch_tab_target = "Meja Belajar"
+                    st.session_state.auto_gen_master = True
                     st.rerun()
 
-    # ── 2. GOOGLE DRIVE LIVE SYNC HUB & CLOUD STATUS ──
+    # ── 2. GOOGLE DRIVE LIVE SYNC HUB & CLOUD STATUS (PERMANENT AUTO-CONNECT) ──
+    curr_user = st.session_state.get("current_user", "dimas")
+    if "gdrive_auto_synced_session" not in st.session_state:
+        st.session_state.gdrive_auto_synced_session = True
+        check_and_auto_download_blok_updates(curr_user)
+
     with st.container(border=True):
-        c_sync_info, c_sync_btns = st.columns([3.2, 1.8], vertical_alignment="center")
+        c_sync_info, c_sync_btns = st.columns([3.4, 1.6], vertical_alignment="center")
         with c_sync_info:
             st.markdown(f'''
-<div style="display:flex;align-items:center;gap:12px;">
-  <div style="font-size:28px;">☁️</div>
+<div style="display:flex;align-items:center;gap:14px;">
+  <div style="font-size:30px;background:rgba(16,185,129,0.12);width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(16,185,129,0.35);">
+    🟢
+  </div>
   <div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:1.02rem;font-weight:900;color:#ffffff;">Arsip Cloud Google Drive (VERTEXTERIAL)</span>
-      <span style="background:rgba(16,185,129,0.15);color:#34d399;font-size:0.65rem;padding:2px 8px;border-radius:8px;font-weight:800;border:1px solid rgba(16,185,129,0.3);">🟢 AUTO-SYNC AKTIF</span>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="font-size:1.02rem;font-weight:900;color:#ffffff;">Google Drive Angkatan (VERTEXTERIAL)</span>
+      <span style="background:rgba(16,185,129,0.15);color:#34d399;font-size:0.68rem;padding:2px 10px;border-radius:10px;font-weight:800;border:1px solid rgba(16,185,129,0.35);">✓ TERHUBUNG OTOMATIS</span>
     </div>
-    <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">
-      Terhubung langsung ke Drive angkatan · <strong>{len(mats)} Modul Kuliah</strong> siap diakses tanpa kuota.
+    <div style="font-size:0.78rem;color:#cbd5e1;margin-top:3px;line-height:1.4;">
+      Semua <strong>{len(mats)} Modul Kuliah</strong> telah tersinkronisasi dan siap dipelajari langsung detik ini. <em>Akses instan kapan saja tanpa perlu unduh manual.</em>
     </div>
   </div>
 </div>
 ''', unsafe_allow_html=True)
         with c_sync_btns:
-            cs_b1, cs_b2 = st.columns(2)
-            with cs_b1:
-                if st.button("🔄 Cek Update", use_container_width=True, key="btn_sync_gdrive_now", help="Periksa slide baru yang diupload dosen"):
-                    with st.spinner("Memeriksa Google Drive..."):
-                        sync_gdrive_folder_recursive("1vrUGhIJuAjfV8R9zKDe8Wr-ojAtnLeJt")
-                        st.rerun()
-            with cs_b2:
-                if st.button("⚡ Unduh BLOK", type="primary", use_container_width=True, key="btn_download_all_blok", help="Otomatis unduh semua kuliah baru dari folder BLOK"):
-                    check_and_auto_download_blok_updates()
-                    st.success("✓ Mengunduh slide baru di latar belakang!")
+            if st.button("🔄 Periksa Slide Baru", use_container_width=True, key="btn_sync_gdrive_now", help="Pemeriksaan otomatis berjalan di latar belakang. Klik tombol ini jika dosen baru saja mengunggah slide baru hari ini."):
+                with st.spinner("Memeriksa update materi terbaru di Google Drive..."):
+                    check_and_auto_download_blok_updates(curr_user)
+                    st.success("✓ Google Drive tersinkronisasi otomatis!")
+                    st.rerun()
                     
     # ── 3. CATALOGUE FILTER & CATEGORY TABS ──
     st.markdown('<div style="margin-top:14px;"></div>', unsafe_allow_html=True)
@@ -3062,7 +3075,14 @@ def render_sub_cloud_library():
     sel_blok_pill = st.radio("Pilih Blok:", blok_categories, index=0, horizontal=True, key="pill_blok_filter", label_visibility="collapsed")
 
     if st.session_state.get("selected_notify"):
-        st.success(f"📖 Modul **{st.session_state.selected_notify}** telah aktif di Meja Belajar! Silakan buka tab **📖 Meja Belajar Kognitif** untuk memulai siklus belajar.")
+        c_not1, c_not2 = st.columns([3.5, 1.5], vertical_alignment="center")
+        with c_not1:
+            st.success(f"📖 Modul **{st.session_state.selected_notify}** telah aktif di Meja Belajar!")
+        with c_not2:
+            if st.button("🚀 Buka Meja Belajar Sekarang →", type="primary", use_container_width=True, key="btn_notif_jump_mb"):
+                st.session_state.switch_tab_target = "Meja Belajar"
+                st.session_state.auto_gen_master = True
+                st.rerun()
 
     # Filtering Engine
     filtered_items = list(mats.items())
@@ -3173,6 +3193,8 @@ def render_sub_cloud_library():
                                 break
                         st.session_state.session_started = True
                         st.session_state.phase = 0
+                        st.session_state.switch_tab_target = "Meja Belajar"
+                        st.session_state.auto_gen_master = True
                         st.rerun()
                 with c_act_tools:
                     with st.popover("⚡ Fitur", use_container_width=True):
@@ -3684,7 +3706,17 @@ def render_sub_spaced_repetition():
                     st.markdown('<div class="card card-sm"><div class="cs" style="text-align:center;">✅ Tidak ada modul yang perlu direview hari ini. Semua materi berada dalam retensi aman!</div></div>', unsafe_allow_html=True)
             for nm, d, _, dt_val, rev_n in due:
                 gcal_link = build_gcal_url(f"🧠 Review NeuroStudy: {nm} (Sesi {rev_n})", dt_val, f"Spaced Repetition Review untuk materi {nm}")
-                st.markdown(f'<div class="card card-sm" style="border-color:rgba(248,113,113,0.3);margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div class="ct" style="font-size:.9rem;">🔴 {nm[:24]}</div><div class="cs">{d.get("sessions",0)} sesi · {d.get("review_count",0)}× review · EF {d.get("ease_factor",2.5):.1f}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="badge br">Review!</span><a href="{gcal_link}" target="_blank" style="text-decoration:none;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.4);border-radius:6px;padding:3px 8px;font-size:0.75rem;font-weight:600;">📅 +GCal</a></div></div></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="card card-sm" style="border-color:rgba(248,113,113,0.3);margin-bottom:6px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div class="ct" style="font-size:.9rem;">🔴 {nm[:24]}</div><div class="cs">{d.get("sessions",0)} sesi · {d.get("review_count",0)}× review · EF {d.get("ease_factor",2.5):.1f}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="badge br">Review!</span><a href="{gcal_link}" target="_blank" style="text-decoration:none;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.4);border-radius:6px;padding:3px 8px;font-size:0.75rem;font-weight:600;">📅 +GCal</a></div></div></div>', unsafe_allow_html=True)
+                safe_due_k = re.sub(r'[^a-zA-Z0-9_]', '_', nm)
+                if st.button(f"🚀 Review Sekarang ({nm[:16]}...)", type="primary", key=f"btn_rev_due_{safe_due_k}", use_container_width=True):
+                    st.session_state.mat_sel = nm
+                    for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
+                        if nm.startswith(f"[{b}]"):
+                            st.session_state.t2_blok_selector = b
+                            break
+                    st.session_state.switch_tab_target = "Meja Belajar"
+                    st.session_state.auto_gen_master = True
+                    st.rerun()
                 
         with cB:
             st.markdown(f'<p style="font-size:.72rem;font-weight:700;color:#4ade80;letter-spacing:1px;text-transform:uppercase;">Jadwal Mendatang ({len(up)})</p>', unsafe_allow_html=True)
@@ -4123,9 +4155,14 @@ E. [Opsi]
                     st.markdown("---")
                     st.info("💡 **Langkah 1 Selesai Dibaca?** Lanjutkan mengunci alur sebab-akibat di tab **🎯 Langkah 2: Socratic Active Recall** di atas.")
                 else:
+                    auto_trigger = st.session_state.pop("auto_gen_master", False)
+                    btn_gen_now = False
                     if not master_cache and not btn_regen_master:
-                        st.info(f"💡 Modul kuliah **{sel}** (~{len(text):,} karakter teks sumber) siap disintesis menjadi Catatan Master Klinis Komprehensif.")
-                        btn_gen_now = st.button("⚡ Bedah 50 Slide & Susun Catatan Master (AI) →", type="primary", use_container_width=True, key=f"btn_generate_master_{sel}")
+                        if auto_trigger:
+                            btn_gen_now = True
+                        else:
+                            st.info(f"💡 Modul kuliah **{sel}** (~{len(text):,} karakter teks sumber) siap disintesis menjadi Catatan Master Klinis Komprehensif.")
+                            btn_gen_now = st.button("⚡ Bedah 50 Slide & Susun Catatan Master (AI) →", type="primary", use_container_width=True, key=f"btn_generate_master_{sel}")
                     else:
                         btn_gen_now = True
                         
@@ -5307,48 +5344,75 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── DIRECT ENTER SUBMIT INJECTOR (POST-RENDER) ────────────────────────────────
-components.html("""
+# ── DYNAMIC TAB SWITCHER & DIRECT ENTER SUBMIT INJECTOR (POST-RENDER) ─────────
+switch_tab_kw = st.session_state.pop("switch_tab_target", None)
+js_switch_code = ""
+if switch_tab_kw:
+    js_switch_code = f"""
+  const targetKeyword = {json.dumps(switch_tab_kw.lower())};
+  let switchAttempts = 0;
+  function triggerTabSwitch() {{
+    switchAttempts++;
+    try {{
+      const pDoc = window.parent.document;
+      const tabs = pDoc.querySelectorAll('[data-testid="stTabs"] button[role="tab"], button[data-baseweb="tab"]');
+      for (const tab of tabs) {{
+        const txt = (tab.innerText || tab.textContent || "").toLowerCase();
+        if (txt.includes(targetKeyword)) {{
+          tab.click();
+          return;
+        }}
+      }}
+    }} catch(e) {{}}
+    if (switchAttempts < 25) {{
+      setTimeout(triggerTabSwitch, 60);
+    }}
+  }}
+  triggerTabSwitch();
+"""
+
+components.html(f"""
 <script>
-(function() {
-  function setupEnter() {
-    try {
+(function() {{
+  {js_switch_code}
+  function setupEnter() {{
+    try {{
       const pDoc = window.parent.document;
       const textareas = pDoc.querySelectorAll('textarea');
-      textareas.forEach(ta => {
+      textareas.forEach(ta => {{
         if (ta.getAttribute('data-enter-bound') === 'true') return;
         ta.setAttribute('data-enter-bound', 'true');
         
-        ta.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && !e.isComposing) {
+        ta.addEventListener('keydown', function(e) {{
+          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && !e.isComposing) {{
             e.preventDefault();
             e.stopPropagation();
             
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
-            ta.dispatchEvent(new Event('change', { bubbles: true }));
+            ta.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            ta.dispatchEvent(new Event('change', {{ bubbles: true }}));
             
             const form = ta.closest('form');
             let submitBtn = form ? form.querySelector('button[type="submit"], button[data-testid="stFormSubmitButton"]') : null;
-            if (!submitBtn) {
+            if (!submitBtn) {{
               submitBtn = pDoc.querySelector('button[kind="primary"], button[data-testid="baseButton-primary"]');
-            }
-            if (submitBtn) {
-              setTimeout(() => { submitBtn.click(); }, 40);
-            }
-          }
-        });
-      });
-    } catch(e) {}
-  }
+            }}
+            if (submitBtn) {{
+              setTimeout(() => {{ submitBtn.click(); }}, 40);
+            }}
+          }}
+        }});
+      }});
+    }} catch(e) {{}}
+  }}
   
   setupEnter();
-  try {
-    const observer = new MutationObserver(() => { setupEnter(); });
-    observer.observe(window.parent.document.body, { childList: true, subtree: true });
-  } catch(e) {
+  try {{
+    const observer = new MutationObserver(() => {{ setupEnter(); }});
+    observer.observe(window.parent.document.body, {{ childList: true, subtree: true }});
+  }} catch(e) {{
     setInterval(setupEnter, 1000);
-  }
-})();
+  }}
+}})();
 </script>
 """, height=0, width=0)
 
