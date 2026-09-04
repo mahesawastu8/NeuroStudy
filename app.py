@@ -1245,7 +1245,7 @@ def extract_document_text(uploaded_file, api_key=""):
                     
             if len(pages_txt) == 0 and len(scanned_pages) > 0 and api_key:
                 genai.configure(api_key=api_key)
-                vision_model = genai.GenerativeModel("gemini-3.6-flash")
+                vision_model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
                 ocr_results = []
                 for p in scanned_pages[:12]:
                     pix = p.get_pixmap(dpi=150)
@@ -1843,11 +1843,17 @@ Output WAJIB berupa JSON ARRAY MURNI tanpa teks pembuka/penutup, format:
   }}
 ]"""
     genai.configure(api_key=api_key)
-    candidate_models = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.5-flash", "gemini-3.6-flash"]
+    candidate_models = [
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3-flash-preview",
+        "gemini-flash-lite-latest",
+        "gemini-flash-latest",
+        "gemini-3.5-flash-lite"
+    ]
     for m_name in candidate_models:
         try:
             m = genai.GenerativeModel(m_name)
-            resp = m.generate_content(prompt, request_options={"timeout": 12})
+            resp = m.generate_content(prompt, request_options={"timeout": 30})
             raw = resp.text.strip()
             if "```json" in raw: raw = raw.split("```json")[1].split("```")[0]
             elif "```" in raw: raw = raw.split("```")[1].split("```")[0]
@@ -2194,17 +2200,31 @@ def stream_ai_transparent(api_key, prompt, ph):
         full_prompt = thinking_instruction + prompt
 
     candidate_models = [
-        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3-flash-preview",
         "gemini-flash-lite-latest",
-        "gemini-3.5-flash",
-        "gemini-3.6-flash"
+        "gemini-flash-latest",
+        "gemini-3.5-flash-lite"
     ]
     
     last_err = ""
-    for model_name in candidate_models:
+    for idx, model_name in enumerate(candidate_models):
         try:
+            if idx > 0:
+                ph.markdown(f"""
+<div class="thinking-live-box">
+  <div class="thinking-live-header">
+    <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#f59e0b;font-weight:700;">
+      <span class="live-dot" style="background:#f59e0b;"></span>
+      🔄 BERALIH KE ENGINE CADANGAN ({model_name})...
+    </div>
+    <span style="font-size:0.72rem;color:#94a3b8;">Menyambungkan ulang...</span>
+  </div>
+  <div class="thinking-live-text"><span class="cur"></span></div>
+</div>
+""", unsafe_allow_html=True)
             m = genai.GenerativeModel(model_name)
-            resp = m.generate_content(full_prompt, stream=True, request_options={"timeout": 14})
+            resp = m.generate_content(full_prompt, stream=True, request_options={"timeout": 45})
             raw_accumulated = ""
             last_render_time = 0
             
@@ -2271,7 +2291,7 @@ def stream_ai_transparent(api_key, prompt, ph):
             last_err = err_str
             continue
             
-    st.error("⚠️ Batas kuota gratis tercapai sementara. Otomatis beralih dalam beberapa detik.")
+    st.error(f"⚠️ Koneksi AI terhambat ({last_err[:120] if last_err else 'Batas kuota tercapai'}). Silakan klik tombol sekali lagi untuk mencoba ulang.")
     return ""
 
 def days_badge(s, sessions=0, review_count=0):
