@@ -1786,6 +1786,76 @@ def build_gcal_url(title, dt, details="", tz_iana="Asia/Jakarta"):
     }
     return "https://calendar.google.com/calendar/render?" + urllib.parse.urlencode(params)
 
+def load_mastery_session(mat_name, username=None):
+    clean_n = re.sub(r'[^a-zA-Z0-9_\-]', '_', mat_name)
+    p = get_user_root(username) / "sessions" / f"mastery_{clean_n}.json"
+    if p.exists():
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except:
+            return None
+    return None
+
+def save_mastery_session(mat_name, state_data, username=None):
+    clean_n = re.sub(r'[^a-zA-Z0-9_\-]', '_', mat_name)
+    p = get_user_root(username) / "sessions" / f"mastery_{clean_n}.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(state_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def generate_single_mastery_question(api_key, text, sel, target_concept=None, force_diff=None):
+    """Menghasilkan 1 soal adaptif kedokteran lengkap dengan analisis keunggulan, kekurangan, dan materi remedial."""
+    import random
+    genai.configure(api_key=api_key)
+    diff = force_diff or random.choice(["Mudah (C1-C2)", "Menengah (C3-C4)", "Sulit (C5-C6)"])
+    focus_instruction = f"Fokuskan soal pada konsep yang perlu diperbaiki: '{target_concept}'." if target_concept else "Pilih konsep kunci atau alur kausalitas penting secara acak dari materi."
+    
+    prompt = f"""Kamu adalah Profesor Kedokteran Senior dan Ahli Evaluasi Kognitif Klinis.
+Dari materi kuliah berikut, buatkan TEPAT 1 SOAL UJIAN KEDOKTERAN tingkat: {diff}.
+{focus_instruction}
+
+Materi:
+Judul: {sel}
+Isi:
+{text[:9000]}
+
+Format JSON murni WAJIB (tanpa pembuka/penutup markdown):
+{{
+  "difficulty": "{diff}",
+  "question": "Skenario kasus klinis atau pertanyaan mekanisme yang jernih dan menantang",
+  "options": {{
+    "A": "Pilihan A",
+    "B": "Pilihan B",
+    "C": "Pilihan C",
+    "D": "Pilihan D"
+  }},
+  "correct_key": "B",
+  "concept_tested": "Nama konsep spesifik yang diuji",
+  "strength_analysis": "Analisis keunggulan jika mahasiswa menjawab benar (fakta kunci yang berhasil mereka kuasai)",
+  "weakness_analysis": "Analisis kekurangan dan penyebab jebakan jika salah (mengapa opsi lain keliru)",
+  "remedial_material": "Intisari materi penjelas singkat (3-4 kalimat) yang lugas dan mudah dipahami agar mahasiswa langsung paham konsep ini"
+}}"""
+
+    candidate_models = [
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3-flash-preview",
+        "gemini-flash-lite-latest",
+        "gemini-flash-latest",
+        "gemini-3.5-flash-lite"
+    ]
+    for m_name in candidate_models:
+        try:
+            m = genai.GenerativeModel(m_name)
+            resp = m.generate_content(prompt, request_options={"timeout": 30})
+            raw = resp.text.strip()
+            if "```json" in raw: raw = raw.split("```json")[1].split("```")[0].strip()
+            elif "```" in raw: raw = raw.split("```")[1].split("```")[0].strip()
+            parsed = json.loads(raw)
+            if "question" in parsed and "options" in parsed and "correct_key" in parsed:
+                return parsed
+        except Exception:
+            continue
+    return None
+
 def generate_ics_content(events):
     lines = [
         "BEGIN:VCALENDAR",
@@ -3176,6 +3246,59 @@ def render_sub_cloud_library():
                     st.session_state.auto_gen_master = True
                     st.rerun()
 
+    # ── 1B. QUICK MODULE PICKER / JUMP (KISS 1-CLICK SELECTOR) ──
+    all_mat_names = sorted(
+        list(mats.keys()),
+        key=lambda x: (
+            0 if x.startswith("[BMS 1]") else (
+                1 if x.startswith("[BUAMS]") else (
+                    2 if x.startswith("[BMS 2]") else (
+                        3 if x.startswith("[BMS 3]") else (
+                            4 if x.startswith("[BMS 4]") else (
+                                5 if x.startswith("[BDT]") else (
+                                    6 if x.startswith("[BMD]") else 7
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            x.lower()
+        )
+    )
+    with st.container(border=True):
+        c_q1, c_q2 = st.columns([3.8, 1.2], vertical_alignment="center")
+        with c_q1:
+            quick_pick = st.selectbox(
+                "⚡ Cari & Pilih Modul Cepat:",
+                options=["-- 🔍 Pilih Langsung dari 208 Modul Kuliah --"] + all_mat_names,
+                key="sb_quick_jump_mat",
+                label_visibility="collapsed"
+            )
+        with c_q2:
+            if st.button("🚀 Buka Modul Terpilih →", use_container_width=True, key="btn_quick_pick_go"):
+                if quick_pick and not quick_pick.startswith("--"):
+                    st.session_state.mat_sel = quick_pick
+                    st.session_state.selected_notify = quick_pick
+                    for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
+                        if quick_pick.startswith(f"[{b}]"):
+                            st.session_state.t2_blok_selector = b
+                            break
+                    st.session_state.session_started = True
+                    st.session_state.switch_tab_target = "Meja Belajar"
+                    st.session_state.auto_gen_master = True
+                    st.rerun()
+
+    if st.session_state.get("selected_notify"):
+        c_not1, c_not2 = st.columns([3.5, 1.5], vertical_alignment="center")
+        with c_not1:
+            st.success(f"📖 Modul **{st.session_state.selected_notify}** telah aktif di Meja Belajar!")
+        with c_not2:
+            if st.button("🚀 Buka Meja Belajar Sekarang →", type="primary", use_container_width=True, key="btn_notif_jump_mb"):
+                st.session_state.switch_tab_target = "Meja Belajar"
+                st.session_state.auto_gen_master = True
+                st.rerun()
+
     # ── 2. GOOGLE DRIVE LIVE SYNC HUB & CLOUD STATUS (PERMANENT AUTO-CONNECT) ──
     curr_user = st.session_state.get("current_user", "dimas")
     if "gdrive_auto_synced_session" not in st.session_state:
@@ -3207,121 +3330,111 @@ def render_sub_cloud_library():
                     check_and_auto_download_blok_updates(curr_user)
                     st.success("✓ Google Drive tersinkronisasi otomatis!")
                     st.rerun()
-                    
-    # ── 3. CATALOGUE FILTER & CATEGORY TABS ──
-    st.markdown('<div style="margin-top:14px;"></div>', unsafe_allow_html=True)
-    c_cat_hdr, c_sch_box, c_sort_box = st.columns([2.5, 3.5, 2.0], vertical_alignment="center")
-    with c_cat_hdr:
-        st.markdown(f'<div style="font-size:1.2rem;font-weight:900;color:#ffffff;letter-spacing:-0.4px;">📚 Modul Kuliah ({len(mats)})</div>', unsafe_allow_html=True)
-    with c_sch_box:
-        search_kw = st.text_input("Cari materi:", placeholder="🔍 Ketik judul kuliah, topik, atau kata kunci...", key="mats_search_box", label_visibility="collapsed")
-    with c_sort_box:
-        sort_opt = st.selectbox("Urutkan:", ["Semua Status", "🆕 Belum Dipelajari", "🔴 Butuh Review", "🟢 Retensi Kuat", "Abjad (A-Z)"], key="mats_filter_sort", label_visibility="collapsed")
 
-    # Blok Category Pills
-    blok_categories = ["Semua Blok", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BDT", "BMD", "Lainnya"]
-    sel_blok_pill = st.radio("Pilih Blok:", blok_categories, index=0, horizontal=True, key="pill_blok_filter", label_visibility="collapsed")
+    # ── 3. COLLAPSIBLE 208-MODULE CATALOGUE (KISS ZERO-SCROLL EXPANDER) ──
+    with st.expander(f"📂 Jelajahi Seluruh {len(mats)} Modul Kuliah (Katalog Lengkap per Blok & Pencarian)", expanded=False):
+        c_cat_hdr, c_sch_box, c_sort_box = st.columns([2.5, 3.5, 2.0], vertical_alignment="center")
+        with c_cat_hdr:
+            st.markdown(f'<div style="font-size:1.1rem;font-weight:900;color:#ffffff;letter-spacing:-0.4px;">📚 Katalog Modul ({len(mats)})</div>', unsafe_allow_html=True)
+        with c_sch_box:
+            search_kw = st.text_input("Cari materi:", placeholder="🔍 Ketik judul kuliah, topik, atau kata kunci...", key="mats_search_box", label_visibility="collapsed")
+        with c_sort_box:
+            sort_opt = st.selectbox("Urutkan:", ["Semua Status", "🆕 Belum Dipelajari", "🔴 Butuh Review", "🟢 Retensi Kuat", "Abjad (A-Z)"], key="mats_filter_sort", label_visibility="collapsed")
 
-    if st.session_state.get("selected_notify"):
-        c_not1, c_not2 = st.columns([3.5, 1.5], vertical_alignment="center")
-        with c_not1:
-            st.success(f"📖 Modul **{st.session_state.selected_notify}** telah aktif di Meja Belajar!")
-        with c_not2:
-            if st.button("🚀 Buka Meja Belajar Sekarang →", type="primary", use_container_width=True, key="btn_notif_jump_mb"):
-                st.session_state.switch_tab_target = "Meja Belajar"
-                st.session_state.auto_gen_master = True
-                st.rerun()
+        # Blok Category Pills
+        blok_categories = ["Semua Blok", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BDT", "BMD", "Lainnya"]
+        sel_blok_pill = st.radio("Pilih Blok:", blok_categories, index=0, horizontal=True, key="pill_blok_filter", label_visibility="collapsed")
 
-    # Filtering Engine
-    filtered_items = list(mats.items())
-    
-    # Filter by Blok Pill
-    if sel_blok_pill != "Semua Blok":
-        if sel_blok_pill == "Lainnya":
-            filtered_items = [(k, v) for k, v in filtered_items if not any(k.startswith(f"[{b}") for b in ["BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BDT", "BMD"])]
-        else:
-            filtered_items = [(k, v) for k, v in filtered_items if k.startswith(f"[{sel_blok_pill}]") or sel_blok_pill.lower() in k.lower()]
-
-    # Filter by Search Keyword
-    if search_kw.strip():
-        filtered_items = [(k, v) for k, v in filtered_items if search_kw.strip().lower() in k.lower()]
+        # Filtering Engine
+        filtered_items = list(mats.items())
         
-    # Sort & Filter Engine
-    if sort_opt == "🆕 Belum Dipelajari":
-        filtered_items = [(k, v) for k, v in filtered_items if v.get("sessions", 0) == 0 and v.get("review_count", 0) == 0]
-    elif sort_opt == "🔴 Butuh Review":
-        filtered_items = [(k, v) for k, v in filtered_items if (v.get("sessions", 0) > 0 or v.get("review_count", 0) > 0) and (calculate_memory_retention(v) or 0) < 70]
-    elif sort_opt == "🟢 Retensi Kuat":
-        filtered_items = [(k, v) for k, v in filtered_items if (v.get("sessions", 0) > 0 or v.get("review_count", 0) > 0) and (calculate_memory_retention(v) or 0) >= 70]
-    elif sort_opt == "Abjad (A-Z)":
-        filtered_items = sorted(filtered_items, key=lambda x: x[0].lower())
-    else:
-        # Default smart sort: BMS 1 first, then BUAMS, then BMS 2..
-        filtered_items = sorted(
-            filtered_items,
-            key=lambda x: (
-                0 if x[0].startswith("[BMS 1]") else (
-                    1 if x[0].startswith("[BUAMS]") else (
-                        2 if x[0].startswith("[BMS") else 3
-                    )
-                ),
-                x[0].lower()
-            )
-        )
+        # Filter by Blok Pill
+        if sel_blok_pill != "Semua Blok":
+            if sel_blok_pill == "Lainnya":
+                filtered_items = [(k, v) for k, v in filtered_items if not any(k.startswith(f"[{b}") for b in ["BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BDT", "BMD"])]
+            else:
+                filtered_items = [(k, v) for k, v in filtered_items if k.startswith(f"[{sel_blok_pill}]") or sel_blok_pill.lower() in k.lower()]
 
-    c_sub_meta1, c_sub_meta2 = st.columns([3.4, 1.6], vertical_alignment="center")
-    with c_sub_meta1:
-        st.markdown(f'<div style="font-size:0.78rem;color:#94a3b8;margin:2px 0 6px;">Menampilkan <strong>{len(filtered_items)}</strong> dari {len(mats)} materi kuliah · <span style="color:#818cf8;font-weight:700;">↕ Kotak Scroll Netap</span></div>', unsafe_allow_html=True)
-    with c_sub_meta2:
-        full_page_scroll = st.toggle("Mode Halaman Penuh", value=False, key="toggle_lib_full_scroll", help="Aktifkan jika ingin melihat daftar panjang tanpa batas kotak scroll.")
-
-    if not mats:
-        st.markdown('<div class="card card-sm"><div class="cs" style="text-align:center;">Belum ada materi kuliah tersimpan.</div></div>', unsafe_allow_html=True)
-    elif not filtered_items:
-        st.markdown(f'<div class="card card-sm"><div class="cs" style="text-align:center;">Tidak ada materi yang cocok dengan filter atau pencarian "{search_kw}".</div></div>', unsafe_allow_html=True)
-    else:
-        # ── 4. RESPONSIVE TWO-COLUMN GRID OF MATERIAL CARDS (FIXED SCROLL CONTAINER) ──
-        container_kwargs = {"height": 620} if not full_page_scroll else {}
-        with st.container(**container_kwargs):
-            col_left, col_right = st.columns(2, gap="medium")
-            cols = [col_left, col_right]
+        # Filter by Search Keyword
+        if search_kw.strip():
+            filtered_items = [(k, v) for k, v in filtered_items if search_kw.strip().lower() in k.lower()]
             
-            for idx_item, (nm, md) in enumerate(filtered_items):
-                target_col = cols[idx_item % 2]
-                with target_col:
-                    n_ses = md.get("sessions", 0)
-                    n_rev = md.get("review_count", 0)
-                    has_studied = (n_ses > 0 or n_rev > 0)
-                    bd = days_badge(md.get("next_review",""), n_ses, n_rev)
-                    retention_pct = calculate_memory_retention(md)
-                    
-                    if has_studied and retention_pct is not None:
-                        ret_color = "#34d399" if retention_pct >= 75 else ("#f59e0b" if retention_pct >= 50 else "#ef4444")
-                        ret_label = "Kuat" if retention_pct >= 75 else ("Menurun" if retention_pct >= 50 else "Kritis (Review Segera)")
-                        ret_text = f"{retention_pct}% ({ret_label})"
-                        bar_width = f"{retention_pct}%"
-                        bar_bg = ret_color
-                        meta_txt = f"{n_ses} sesi · {n_rev}× review · EF {md.get('ease_factor',2.5):.1f}"
-                    else:
-                        ret_color = "#94a3b8"
-                        ret_text = "⚪ Belum Dipelajari"
-                        bar_width = "0%"
-                        bar_bg = "rgba(148, 163, 184, 0.2)"
-                        meta_txt = "Belum ada sesi · Siap dipelajari"
-                    
-                    with st.container(border=True):
-                        # Header & Info
-                        c_mat_h1, c_mat_h2 = st.columns([3.6, 1.4], vertical_alignment="center")
-                        with c_mat_h1:
-                            st.markdown(f'''
+        # Sort & Filter Engine
+        if sort_opt == "🆕 Belum Dipelajari":
+            filtered_items = [(k, v) for k, v in filtered_items if v.get("sessions", 0) == 0 and v.get("review_count", 0) == 0]
+        elif sort_opt == "🔴 Butuh Review":
+            filtered_items = [(k, v) for k, v in filtered_items if (v.get("sessions", 0) > 0 or v.get("review_count", 0) > 0) and (calculate_memory_retention(v) or 0) < 70]
+        elif sort_opt == "🟢 Retensi Kuat":
+            filtered_items = [(k, v) for k, v in filtered_items if (v.get("sessions", 0) > 0 or v.get("review_count", 0) > 0) and (calculate_memory_retention(v) or 0) >= 70]
+        elif sort_opt == "Abjad (A-Z)":
+            filtered_items = sorted(filtered_items, key=lambda x: x[0].lower())
+        else:
+            # Default smart sort: BMS 1 first, then BUAMS, then BMS 2..
+            filtered_items = sorted(
+                filtered_items,
+                key=lambda x: (
+                    0 if x[0].startswith("[BMS 1]") else (
+                        1 if x[0].startswith("[BUAMS]") else (
+                            2 if x[0].startswith("[BMS") else 3
+                        )
+                    ),
+                    x[0].lower()
+                )
+            )
+
+        c_sub_meta1, c_sub_meta2 = st.columns([3.4, 1.6], vertical_alignment="center")
+        with c_sub_meta1:
+            st.markdown(f'<div style="font-size:0.78rem;color:#94a3b8;margin:2px 0 6px;">Menampilkan <strong>{len(filtered_items)}</strong> dari {len(mats)} materi kuliah · <span style="color:#818cf8;font-weight:700;">↕ Kotak Scroll Netap</span></div>', unsafe_allow_html=True)
+        with c_sub_meta2:
+            full_page_scroll = st.toggle("Mode Halaman Penuh", value=False, key="toggle_lib_full_scroll", help="Aktifkan jika ingin melihat daftar panjang tanpa batas kotak scroll.")
+
+        if not mats:
+            st.markdown('<div class="card card-sm"><div class="cs" style="text-align:center;">Belum ada materi kuliah tersimpan.</div></div>', unsafe_allow_html=True)
+        elif not filtered_items:
+            st.markdown(f'<div class="card card-sm"><div class="cs" style="text-align:center;">Tidak ada materi yang cocok dengan filter atau pencarian "{search_kw}".</div></div>', unsafe_allow_html=True)
+        else:
+            # ── 4. RESPONSIVE TWO-COLUMN GRID OF MATERIAL CARDS (FIXED SCROLL CONTAINER) ──
+            container_kwargs = {"height": 620} if not full_page_scroll else {}
+            with st.container(**container_kwargs):
+                col_left, col_right = st.columns(2, gap="medium")
+                cols = [col_left, col_right]
+                
+                for idx_item, (nm, md) in enumerate(filtered_items):
+                    target_col = cols[idx_item % 2]
+                    with target_col:
+                        n_ses = md.get("sessions", 0)
+                        n_rev = md.get("review_count", 0)
+                        has_studied = (n_ses > 0 or n_rev > 0)
+                        bd = days_badge(md.get("next_review",""), n_ses, n_rev)
+                        retention_pct = calculate_memory_retention(md)
+                        
+                        if has_studied and retention_pct is not None:
+                            ret_color = "#34d399" if retention_pct >= 75 else ("#f59e0b" if retention_pct >= 50 else "#ef4444")
+                            ret_label = "Kuat" if retention_pct >= 75 else ("Menurun" if retention_pct >= 50 else "Kritis (Review Segera)")
+                            ret_text = f"{retention_pct}% ({ret_label})"
+                            bar_width = f"{retention_pct}%"
+                            bar_bg = ret_color
+                            meta_txt = f"{n_ses} sesi · {n_rev}× review · EF {md.get('ease_factor',2.5):.1f}"
+                        else:
+                            ret_color = "#94a3b8"
+                            ret_text = "⚪ Belum Dipelajari"
+                            bar_width = "0%"
+                            bar_bg = "rgba(148, 163, 184, 0.2)"
+                            meta_txt = "Belum ada sesi · Siap dipelajari"
+                        
+                        with st.container(border=True):
+                            # Header & Info
+                            c_mat_h1, c_mat_h2 = st.columns([3.6, 1.4], vertical_alignment="center")
+                            with c_mat_h1:
+                                st.markdown(f'''
 <div style="font-size:0.95rem;font-weight:800;color:#ffffff;line-height:1.3;">📄 {nm}</div>
 <div style="font-size:0.7rem;color:#94a3b8;margin-top:2px;">{meta_txt}</div>
 ''', unsafe_allow_html=True)
-                        with c_mat_h2:
-                            st.markdown(f'<div style="text-align:right;">{bd}</div>', unsafe_allow_html=True)
-                        
-                        # Ebbinghaus Metacognitive Retention Gauge
-                        st.markdown(f'''
+                            with c_mat_h2:
+                                st.markdown(f'<div style="text-align:right;">{bd}</div>', unsafe_allow_html=True)
+                            
+                            # Ebbinghaus Metacognitive Retention Gauge
+                            st.markdown(f'''
 <div style="margin:8px 0 10px;">
   <div style="display:flex;justify-content:space-between;font-size:0.7rem;font-weight:700;margin-bottom:3px;">
     <span style="color:#94a3b8;">Kekuatan Retensi Memori:</span>
@@ -3332,38 +3445,38 @@ def render_sub_cloud_library():
   </div>
 </div>
 ''', unsafe_allow_html=True)
-                        
-                        # Clean Action Row (Main Action + Quick Power Tools Popover)
-                        c_act_main, c_act_tools = st.columns([3.0, 1.0], vertical_alignment="center")
-                        safe_k = re.sub(r'[^a-zA-Z0-9_]', '_', nm)
-                        with c_act_main:
-                            btn_label = f"🚀 Lanjut ({nm[:18]}…)" if has_studied else f"🚀 Mulai Belajar ({nm[:18]}…)"
-                            if st.button(btn_label, type="primary", use_container_width=True, key=f"btn_start_sesi_{safe_k}"):
-                                st.session_state.mat_sel = nm
-                                st.session_state.selected_notify = nm
-                                for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
-                                    if nm.startswith(f"[{b}]"):
-                                        st.session_state.t2_blok_selector = b
-                                        break
-                                st.session_state.session_started = True
-                                st.session_state.phase = 0
-                                st.session_state.switch_tab_target = "Meja Belajar"
-                                st.session_state.auto_gen_master = True
-                                st.rerun()
-                        with c_act_tools:
-                            with st.popover("⚡ Fitur", use_container_width=True):
-                                st.markdown(f"**⚡ Power Tools: {nm[:22]}...**")
-                                if st.button("🎯 Bedah Jebakan Ujian", key=f"btn_v_{safe_k}", use_container_width=True):
-                                    with st.spinner("Dr. Marcus Vance sedang membedah jebakan..."):
-                                        prompt_v = f"Kamu adalah Dr. Marcus Vance, Sp.FK. Bedah 3 jebakan soal pilihan ganda paling mematikan pada materi: {md.get('text','')[:7000]}"
-                                        stream_ai_transparent(api_key, prompt_v, st.empty())
-                                if st.button("🩺 Kasus Klinis IGD", key=f"btn_t_{safe_k}", use_container_width=True):
-                                    with st.spinner("Dr. Aris Thorne menyiapkan simulasi IGD..."):
-                                        prompt_t = f"Kamu adalah Dr. Aris Thorne, Sp.PD. Buat 1 simulasi kasus pasien darurat di IGD berdasarkan materi ini: {md.get('text','')[:7000]}"
-                                        stream_ai_transparent(api_key, prompt_t, st.empty())
-                                if st.button("📄 Medical Cheat Sheet", key=f"btn_cs_{safe_k}", use_container_width=True):
-                                    with st.spinner("Menyusun Cheat Sheet..."):
-                                        cs_p = f"""Buat RANGKUMAN EKSEKUTIF 1 HALAMAN (Medical Cheat Sheet) yang sangat padat, terstruktur, dan siap cetak dari materi ini:
+                            
+                            # Clean Action Row (Main Action + Quick Power Tools Popover)
+                            c_act_main, c_act_tools = st.columns([3.0, 1.0], vertical_alignment="center")
+                            safe_k = re.sub(r'[^a-zA-Z0-9_]', '_', nm)
+                            with c_act_main:
+                                btn_label = f"🚀 Lanjut ({nm[:18]}…)" if has_studied else f"🚀 Mulai Belajar ({nm[:18]}…)"
+                                if st.button(btn_label, type="primary", use_container_width=True, key=f"btn_start_sesi_{safe_k}"):
+                                    st.session_state.mat_sel = nm
+                                    st.session_state.selected_notify = nm
+                                    for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
+                                        if nm.startswith(f"[{b}]"):
+                                            st.session_state.t2_blok_selector = b
+                                            break
+                                    st.session_state.session_started = True
+                                    st.session_state.phase = 0
+                                    st.session_state.switch_tab_target = "Meja Belajar"
+                                    st.session_state.auto_gen_master = True
+                                    st.rerun()
+                            with c_act_tools:
+                                with st.popover("⚡ Fitur", use_container_width=True):
+                                    st.markdown(f"**⚡ Power Tools: {nm[:22]}...**")
+                                    if st.button("🎯 Bedah Jebakan Ujian", key=f"btn_v_{safe_k}", use_container_width=True):
+                                        with st.spinner("Dr. Marcus Vance sedang membedah jebakan..."):
+                                            prompt_v = f"Kamu adalah Dr. Marcus Vance, Sp.FK. Bedah 3 jebakan soal pilihan ganda paling mematikan pada materi: {md.get('text','')[:7000]}"
+                                            stream_ai_transparent(api_key, prompt_v, st.empty())
+                                    if st.button("🩺 Kasus Klinis IGD", key=f"btn_t_{safe_k}", use_container_width=True):
+                                        with st.spinner("Dr. Aris Thorne menyiapkan simulasi IGD..."):
+                                            prompt_t = f"Kamu adalah Dr. Aris Thorne, Sp.PD. Buat 1 simulasi kasus pasien darurat di IGD berdasarkan materi ini: {md.get('text','')[:7000]}"
+                                            stream_ai_transparent(api_key, prompt_t, st.empty())
+                                    if st.button("📄 Medical Cheat Sheet", key=f"btn_cs_{safe_k}", use_container_width=True):
+                                        with st.spinner("Menyusun Cheat Sheet..."):
+                                            cs_p = f"""Buat RANGKUMAN EKSEKUTIF 1 HALAMAN (Medical Cheat Sheet) yang sangat padat, terstruktur, dan siap cetak dari materi ini:
 Materi:
 {md.get('text','')[:7000]}
 
@@ -3372,17 +3485,17 @@ Format WAJIB:
 2. **📊 Tabel Obat / Klasifikasi:** (Golongan, Contoh, Efek Utama, Efek Samping Kritis)
 3. **⚠️ 3 Aturan Emas Klinis:** (Peringatan penting di ranjang pasien)
 4. **💡 Mnemonik Klinis:** (Cara cepat mengingat fakta rumit)"""
-                                        stream_ai_transparent(api_key, cs_p, st.empty())
-                                cards = load_flashcards(nm)
-                                if cards:
-                                    st.download_button(
-                                        label="📥 Unduh Anki (.tsv)",
-                                        data=generate_anki_export_data(cards, nm),
-                                        file_name=f"{nm}_anki.txt",
-                                        mime="text/plain",
-                                        key=f"dl_anki_{safe_k}",
-                                        use_container_width=True
-                                    )
+                                            stream_ai_transparent(api_key, cs_p, st.empty())
+                                    cards = load_flashcards(nm)
+                                    if cards:
+                                        st.download_button(
+                                            label="📥 Unduh Anki (.tsv)",
+                                            data=generate_anki_export_data(cards, nm),
+                                            file_name=f"{nm}_anki.txt",
+                                            mime="text/plain",
+                                            key=f"dl_anki_{safe_k}",
+                                            use_container_width=True
+                                        )
 
     # ── 5. OPTIONAL ADVANCED TOOLS EXPANDER (MANUAL UPLOAD & ZIP BACKUP) ──
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
@@ -4089,6 +4202,232 @@ Setelah mencoba, tolong beri masukan di tab "Uji Coba & Feedback Beta" ya. Terim
 
 
 
+def render_mastery_learning_loop(sel, text, api_key):
+    """
+    KISS Engine - Loop Belajar Tuntas:
+    1. Intisari Materi Kunci
+    2. Soal demi Soal Tak Terbatas (Tingkat Acak: Mudah, Menengah, Sulit)
+    3. Analisis Keunggulan (jika benar) & Analisis Kekurangan (jika salah)
+    4. Dikasih materi penjelas lagi jika keliru
+    5. Soal baru lagi terus-menerus sampai paham semua dan 100% benar!
+    """
+    if not text:
+        st.warning("Materi tidak memiliki teks sumber yang cukup.")
+        return
+
+    # Inisialisasi sesi belajar tuntas
+    curr_mat = st.session_state.get("mastery_mat_loaded")
+    if curr_mat != sel or "mastery_data" not in st.session_state:
+        st.session_state.mastery_mat_loaded = sel
+        st.session_state.mastery_data = load_mastery_session(sel) or {
+            "total_answered": 0,
+            "correct_count": 0,
+            "mastered_concepts": [],
+            "weak_concepts": [],
+            "current_q": None,
+            "evaluated": False,
+            "user_choice": None,
+            "last_eval": None
+        }
+
+    m_data = st.session_state.mastery_data
+
+    # Header & Metrik Belajar Tuntas
+    st.markdown(f'''
+<div style="background:linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(56,189,248,0.1) 100%);border:1.5px solid rgba(99,102,241,0.35);border-radius:14px;padding:16px 20px;margin:12px 0 16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+    <div>
+      <span style="background:#4f46e5;color:#fff;font-size:0.72rem;font-weight:900;padding:2px 8px;border-radius:6px;letter-spacing:0.5px;text-transform:uppercase;">🔥 LOOP BELAJAR TUNTAS (KISS)</span>
+      <div style="font-size:1.25rem;font-weight:900;color:#ffffff;margin-top:4px;">{sel}</div>
+      <div style="font-size:0.8rem;color:#cbd5e1;margin-top:2px;">Materi ➔ Soal Acak (Mudah/Menengah/Sulit) ➔ Analisis Kelemahan ➔ Tambal Materi ➔ Paham 100%.</div>
+    </div>
+  </div>
+</div>
+''', unsafe_allow_html=True)
+
+    # Metrik Penguasaan
+    c_m1, c_m2, c_m3, c_m4 = st.columns(4)
+    tot = m_data.get("total_answered", 0)
+    corr = m_data.get("correct_count", 0)
+    acc = int((corr / tot) * 100) if tot > 0 else 0
+    is_mastered = (tot >= 5 and acc >= 80)
+    
+    c_m1.metric("🎯 Soal Terjawab", f"{tot}")
+    c_m2.metric("✅ Jawaban Benar", f"{corr}")
+    c_m3.metric("📈 Akurasi Pemahaman", f"{acc}%")
+    status_label = "🏆 TUNTAS (100%)" if (tot >= 3 and acc == 100) else ("🎉 MAHIR (Mastered)" if is_mastered else ("🟡 Sedang Berlatih" if tot > 0 else "⚪ Siap Mulai"))
+    c_m4.metric("📊 Status Kompetensi", status_label)
+
+    # 1. Kapsul Materi Singkat (2 Menit)
+    with st.expander("📖 Intisari Konsep Kunci (Baca Singkat Sebelum / Saat Berlatih)", expanded=(tot == 0)):
+        st.caption("Poin-poin inti modul kuliah untuk fondasi sebelum menjawab soal:")
+        compressed_text = get_cached_high_yield_text(sel, text, api_key)
+        st.markdown(compressed_text[:3500])
+
+    st.markdown("---")
+
+    # 2. Kotak Soal Adaptif Aktif
+    if not m_data.get("current_q"):
+        target_weak = m_data["weak_concepts"][-1] if m_data.get("weak_concepts") else None
+        if target_weak:
+            st.info(f"🚨 **Target Perbaikan:** Anda terdeteksi masih lemah pada konsep **'{target_weak}'**. Mari kita uji konsep ini!")
+            btn_prompt_txt = f"🎯 Rancang Soal Penguatan: {target_weak}"
+        else:
+            btn_prompt_txt = "⚡ Rancang & Ambil Soal Baru (Tingkat Acak: Mudah / Menengah / Sulit) →"
+
+        if st.button(btn_prompt_txt, type="primary", use_container_width=True, key=f"btn_next_q_draw_{sel}"):
+            with st.spinner("AI sedang merancang soal adaptif untuk Anda..."):
+                new_q = generate_single_mastery_question(api_key, text, sel, target_concept=target_weak)
+                if new_q:
+                    m_data["current_q"] = new_q
+                    m_data["evaluated"] = False
+                    m_data["user_choice"] = None
+                    save_mastery_session(sel, m_data)
+                    st.rerun()
+                else:
+                    st.error("Gagal membuat soal, silakan klik tombol lagi.")
+    else:
+        q = m_data["current_q"]
+        diff = q.get("difficulty", "Menengah")
+        diff_color = "#34d399" if "Mudah" in diff else ("#f59e0b" if "Menengah" in diff else "#ef4444")
+        q_num = tot + (0 if m_data.get("evaluated") else 1)
+
+        st.markdown(f'''
+<div style="background:rgba(30,41,59,0.7);border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <span style="background:rgba(99,102,241,0.15);color:#818cf8;font-size:0.75rem;padding:3px 10px;border-radius:8px;font-weight:800;">
+      SOAL #{q_num}
+    </span>
+    <span style="background:rgba(255,255,255,0.05);color:{diff_color};font-size:0.75rem;padding:3px 10px;border-radius:8px;font-weight:800;border:1px solid {diff_color}40;">
+      📊 Tingkat: {diff}
+    </span>
+  </div>
+  <div style="font-size:1.05rem;font-weight:700;color:#f8fafc;line-height:1.6;">
+    {q.get("question")}
+  </div>
+</div>
+''', unsafe_allow_html=True)
+
+        if not m_data.get("evaluated"):
+            opt_keys = ["A", "B", "C", "D"]
+            opts_dict = q.get("options", {})
+            opt_labels = [f"{k}. {opts_dict.get(k, '')}" for k in opt_keys if k in opts_dict]
+
+            chosen = st.radio("Pilih Jawaban Anda:", opt_labels, index=None, key=f"rad_choice_{tot}")
+            if st.button("✅ Kirim Jawaban & Analisis Hasil", type="primary", use_container_width=True, key=f"btn_eval_{tot}"):
+                if not chosen:
+                    st.warning("Silakan pilih salah satu opsi terlebih dahulu.")
+                else:
+                    chosen_key = chosen[:1].upper()
+                    correct_key = str(q.get("correct_key", "")).strip()[:1].upper()
+                    is_correct = (chosen_key == correct_key)
+                    
+                    m_data["total_answered"] = tot + 1
+                    concept = q.get("concept_tested", "Konsep Klinis")
+                    if is_correct:
+                        m_data["correct_count"] = corr + 1
+                        if concept not in m_data.get("mastered_concepts", []):
+                            m_data["mastered_concepts"].append(concept)
+                        if concept in m_data.get("weak_concepts", []):
+                            m_data["weak_concepts"].remove(concept)
+                    else:
+                        if concept not in m_data.get("weak_concepts", []):
+                            m_data["weak_concepts"].append(concept)
+
+                    m_data["evaluated"] = True
+                    m_data["user_choice"] = chosen_key
+                    m_data["last_eval"] = {
+                        "is_correct": is_correct,
+                        "chosen_key": chosen_key,
+                        "correct_key": correct_key,
+                        "strength_analysis": q.get("strength_analysis", "Pemahaman konsep klinis sudah tepat."),
+                        "weakness_analysis": q.get("weakness_analysis", "Terjadi miskonsepsi pada alur kausalitas."),
+                        "remedial_material": q.get("remedial_material", "Pelajari kembali hubungan kausalitas antar konsep pada materi ini."),
+                        "concept_tested": concept
+                    }
+                    save_mastery_session(sel, m_data)
+                    st.rerun()
+        else:
+            ev = m_data.get("last_eval", {})
+            if ev.get("is_correct"):
+                st.markdown(f'''
+<div style="background:rgba(16,185,129,0.12);border:1.5px solid rgba(16,185,129,0.4);border-radius:14px;padding:18px 20px;margin-bottom:16px;">
+  <div style="display:flex;align-items:center;gap:10px;color:#34d399;font-size:1.1rem;font-weight:900;">
+    <span>✅</span> <span>JAWABAN ANDA BENAR! (Pilihan {ev.get("correct_key")})</span>
+  </div>
+  <div style="margin-top:10px;font-size:0.88rem;color:#e2e8f0;line-height:1.5;">
+    <strong>🌟 Analisis Keunggulan Kognitif:</strong><br>
+    {ev.get("strength_analysis")}
+  </div>
+  <div style="margin-top:8px;font-size:0.8rem;color:#34d399;font-weight:700;">
+    💡 Konsep Berhasil Dikuasai: <u>{ev.get("concept_tested")}</u>
+  </div>
+</div>
+''', unsafe_allow_html=True)
+                if st.button("🚀 Lanjut ke Soal Berikutnya (Level Acak) ➡️", type="primary", use_container_width=True, key=f"btn_next_corr_{tot}"):
+                    m_data["current_q"] = None
+                    m_data["evaluated"] = False
+                    save_mastery_session(sel, m_data)
+                    st.rerun()
+            else:
+                st.markdown(f'''
+<div style="background:rgba(239,68,68,0.12);border:1.5px solid rgba(239,68,68,0.4);border-radius:14px;padding:18px 20px;margin-bottom:16px;">
+  <div style="display:flex;align-items:center;gap:10px;color:#f87171;font-size:1.1rem;font-weight:900;">
+    <span>❌</span> <span>JAWABAN BELUM TEPAT (Anda memilih {ev.get("chosen_key")}, Kunci Benar: {ev.get("correct_key")})</span>
+  </div>
+  <div style="margin-top:10px;font-size:0.88rem;color:#e2e8f0;line-height:1.5;">
+    <strong>🚨 Analisis Kekurangan & Jebakan Kognitif:</strong><br>
+    {ev.get("weakness_analysis")}
+  </div>
+</div>
+
+<div style="background:linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.1));border:1.5px solid rgba(59,130,246,0.4);border-radius:14px;padding:18px 20px;margin-bottom:16px;">
+  <div style="display:flex;align-items:center;gap:8px;color:#60a5fa;font-size:0.95rem;font-weight:800;margin-bottom:6px;">
+    <span>💊</span> <span>MATERI REMEDIAL (PENJELASAN PENGUATAN KONSEP):</span>
+  </div>
+  <div style="font-size:0.88rem;color:#e0f2fe;line-height:1.6;">
+    {ev.get("remedial_material")}
+  </div>
+</div>
+''', unsafe_allow_html=True)
+                c_f1, c_f2 = st.columns(2)
+                with c_f1:
+                    if st.button("🔁 Paham! Uji Konsep Lemah Ini Lagi ➡️", type="primary", use_container_width=True, key=f"btn_retry_weak_{tot}"):
+                        m_data["current_q"] = None
+                        m_data["evaluated"] = False
+                        save_mastery_session(sel, m_data)
+                        st.rerun()
+                with c_f2:
+                    if st.button("🎲 Ganti Soal Topik Lain ➡️", use_container_width=True, key=f"btn_skip_topic_{tot}"):
+                        m_data["current_q"] = None
+                        m_data["evaluated"] = False
+                        save_mastery_session(sel, m_data)
+                        st.rerun()
+
+    # Tracker Konsep & Reset
+    st.markdown('<div style="margin-top:16px;"></div>', unsafe_allow_html=True)
+    c_tk1, c_tk2 = st.columns([3.5, 1.5], vertical_alignment="center")
+    with c_tk1:
+        if m_data.get("mastered_concepts"):
+            st.markdown(f"**🟢 Konsep Dikuasai ({len(m_data['mastered_concepts'])}):** " + ", ".join(f"`{c}`" for c in m_data["mastered_concepts"]))
+        if m_data.get("weak_concepts"):
+            st.markdown(f"**🔴 Perlu Dilatih ({len(m_data['weak_concepts'])}):** " + ", ".join(f"`{c}`" for c in m_data["weak_concepts"]))
+    with c_tk2:
+        if st.button("🔄 Reset Latihan Modul Ini", use_container_width=True, key=f"btn_rst_mastery_all_{sel}"):
+            m_data = {
+                "total_answered": 0,
+                "correct_count": 0,
+                "mastered_concepts": [],
+                "weak_concepts": [],
+                "current_q": None,
+                "evaluated": False,
+                "user_choice": None,
+                "last_eval": None
+            }
+            save_mastery_session(sel, m_data)
+            st.session_state.mastery_data = m_data
+            st.rerun()
+
 def render_tab_belajar():
     api_key = get_gemini_api_key()
     is_owner = st.session_state.get("is_owner", False)
@@ -4102,7 +4441,7 @@ def render_tab_belajar():
     with c_m2:
         study_mode_sel = st.radio(
             "Mode Belajar:",
-            ["🏛️ Sistem Pareto 80/20 (Zero-PPT)", "⚡ Mode Darurat H-1 Ujian", "🎓 Mode Alur 6-Fase"],
+            ["🔥 Loop Belajar Tuntas (KISS: Materi ➔ Soal ➔ Analisis)", "🏛️ Buku Catatan Master Penuh (Zero-PPT)", "⚡ Mode Darurat H-1 Ujian", "🎓 Mode Alur 6-Fase"],
             index=0,
             horizontal=False,
             key="study_mode_picker",
@@ -4243,8 +4582,11 @@ Seluruh materi, penalaran klinis, dan algoritma sintesis NeuroStudy berakar seca
 </div>
 ''', unsafe_allow_html=True)
 
-        # ── CEK MODE DARURAT UJIAN (FAST TRACK H-1) ──
-        if st.session_state.get("study_mode") == "⚡ Mode Darurat H-1 Ujian":
+        # ── 1. MODE UTAMA: LOOP BELAJAR TUNTAS (KISS ADAPTIVE MASTERY) ──
+        if st.session_state.get("study_mode") == "🔥 Loop Belajar Tuntas (KISS: Materi ➔ Soal ➔ Analisis)":
+            render_mastery_learning_loop(sel, text, api_key)
+        # ── 2. CEK MODE DARURAT UJIAN (FAST TRACK H-1) ──
+        elif st.session_state.get("study_mode") == "⚡ Mode Darurat H-1 Ujian":
             st.markdown(f'''
 <div style="background:linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(245,158,11,0.08) 100%);border:1.5px solid rgba(239,68,68,0.4);border-radius:14px;padding:18px 22px;margin:16px 0 20px;">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
@@ -5645,6 +5987,141 @@ with tab_review:
 
 with tab_spesialis_akun:
     render_tab_spesialis_dan_akun()
+
+def render_google_floating_action_button():
+    st.markdown('''
+<style>
+/* ── GOOGLE MEDICAL WORKSPACE FLOATING ACTION BUTTON (FAB) ── */
+.google-fab-wrapper {
+  position: fixed;
+  bottom: 26px;
+  right: 26px;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+.google-fab-trigger {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 2px solid rgba(66, 133, 244, 0.75);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(66, 133, 244, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  text-decoration: none;
+  outline: none;
+}
+.google-fab-trigger:hover {
+  transform: scale(1.1) rotate(6deg);
+  box-shadow: 0 6px 26px rgba(66, 133, 244, 0.7);
+  border-color: #60a5fa;
+}
+.google-fab-menu {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px) scale(0.92);
+  transform-origin: bottom right;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.google-fab-wrapper:hover .google-fab-menu,
+.google-fab-wrapper:focus-within .google-fab-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+.google-fab-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  padding: 8px 16px 8px 10px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s ease;
+}
+.google-fab-item:hover {
+  transform: translateX(-5px);
+  background: rgba(30, 41, 59, 0.98);
+}
+.google-fab-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+.google-fab-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+.google-fab-sub {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  line-height: 1;
+}
+</style>
+
+<div class="google-fab-wrapper" id="google-fab-wrapper">
+  <div class="google-fab-trigger" title="Google Medical Workspace">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+    </svg>
+  </div>
+  <div class="google-fab-menu">
+    <a href="https://drive.google.com" target="_blank" class="google-fab-item" style="border-color: rgba(234,67,53,0.4);">
+      <div class="google-fab-icon" style="background: rgba(234,67,53,0.18); color: #f87171;">📁</div>
+      <div>
+        <div class="google-fab-title" style="color: #f87171;">Google Drive</div>
+        <div class="google-fab-sub">Arsip 208 Slide Cloud</div>
+      </div>
+    </a>
+    <a href="https://scholar.google.com" target="_blank" class="google-fab-item" style="border-color: rgba(251,188,5,0.4);">
+      <div class="google-fab-icon" style="background: rgba(251,188,5,0.18); color: #fbbf24;">🔬</div>
+      <div>
+        <div class="google-fab-title" style="color: #fbbf24;">Google Scholar</div>
+        <div class="google-fab-sub">Riset EBM & Jurnal</div>
+      </div>
+    </a>
+    <a href="https://meet.google.com/new" target="_blank" class="google-fab-item" style="border-color: rgba(52,168,83,0.4);">
+      <div class="google-fab-icon" style="background: rgba(52,168,83,0.18); color: #34d399;">🎥</div>
+      <div>
+        <div class="google-fab-title" style="color: #34d399;">Google Meet</div>
+        <div class="google-fab-sub">Diskusi Kasus & PBL</div>
+      </div>
+    </a>
+    <a href="https://calendar.google.com" target="_blank" class="google-fab-item" style="border-color: rgba(66,133,244,0.4);">
+      <div class="google-fab-icon" style="background: rgba(66,133,244,0.18); color: #60a5fa;">📅</div>
+      <div>
+        <div class="google-fab-title" style="color: #60a5fa;">Google Calendar</div>
+        <div class="google-fab-sub">Jadwal & Review SM-2</div>
+      </div>
+    </a>
+  </div>
+</div>
+''', unsafe_allow_html=True)
+
+render_google_floating_action_button()
 
 # ── PERMANENT MEDICOLEGAL SAFE HARBOR DISCLAIMER (FOOTER) ────────────────────
 st.markdown("""
