@@ -2956,6 +2956,7 @@ def render_sub_cloud_library():
             with c_h2:
                 if st.button(hero_btn_text, type="primary", use_container_width=True, key="btn_hero_resume"):
                     st.session_state.mat_sel = latest_mat
+                    st.session_state.selected_notify = latest_mat
                     for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
                         if latest_mat.startswith(f"[{b}]"):
                             st.session_state.t2_blok_selector = b
@@ -3006,6 +3007,9 @@ def render_sub_cloud_library():
     # Blok Category Pills
     blok_categories = ["Semua Blok", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BDT", "BMD", "Lainnya"]
     sel_blok_pill = st.radio("Pilih Blok:", blok_categories, index=0, horizontal=True, key="pill_blok_filter", label_visibility="collapsed")
+
+    if st.session_state.get("selected_notify"):
+        st.success(f"📖 Modul **{st.session_state.selected_notify}** telah aktif di Meja Belajar! Silakan buka tab **📖 Meja Belajar Kognitif** untuk memulai siklus belajar.")
 
     # Filtering Engine
     filtered_items = list(mats.items())
@@ -3108,6 +3112,7 @@ def render_sub_cloud_library():
                     btn_label = f"🚀 Lanjut ({nm[:18]}…)" if has_studied else f"🚀 Mulai Belajar ({nm[:18]}…)"
                     if st.button(btn_label, type="primary", use_container_width=True, key=f"btn_start_sesi_{nm[:20]}_{idx_item}"):
                         st.session_state.mat_sel = nm
+                        st.session_state.selected_notify = nm
                         for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
                             if nm.startswith(f"[{b}]"):
                                 st.session_state.t2_blok_selector = b
@@ -3819,58 +3824,7 @@ Setelah mencoba, tolong beri masukan di tab "Uji Coba & Feedback Beta" ya. Terim
                 st.json(all_fb)
 
 
-# ── PERMANENT MEDICOLEGAL SAFE HARBOR DISCLAIMER (FOOTER) ────────────────────
-st.markdown("""
-<div style="margin-top: 40px; padding: 16px 20px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; text-align: center;">
-  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; font-weight: 800; color: #f87171; text-transform: uppercase; letter-spacing: 0.5px;">
-    <span>⚠️</span> PEMBERITAHUAN MEDIKOLEGAL & KEBIJAKAN PENGGUNAAN AMAN (SAFE HARBOR)
-  </div>
-  <div style="font-size: 0.73rem; color: #94a3b8; line-height: 1.6; max-width: 950px; margin: 6px auto 0;">
-    <strong>NeuroStudy adalah simulator dan platform edukasi kognitif medis semata.</strong> Seluruh materi, simulasi kasus IGD, kalkulasi dosis, dan rekomendasi terapi yang dihasilkan oleh model AI dirancang khusus untuk keperluan latihan akademis mahasiswa dan persiapan ujian blok/UKMPPD. Konten ini <u>BUKAN</u> merupakan protokol medis resmi, panduan peresepan klinis riil, atau pengganti keputusan dokter berlisensi. Dalam menangani pasien nyata di rumah sakit, selalu verifikasi ke standar emas (Fornas, PNPK Kemenkes, FDA, IDI) dan supervisi dokter penanggung jawab pelayanan (DPJP).
-  </div>
-</div>
-""", unsafe_allow_html=True)
 
-
-# ── DIRECT ENTER SUBMIT INJECTOR (POST-RENDER) ────────────────────────────────
-components.html("""
-<script>
-(function() {
-  function setupEnter() {
-    try {
-      const pDoc = window.parent.document;
-      const textareas = pDoc.querySelectorAll('textarea');
-      textareas.forEach(ta => {
-        if (ta.getAttribute('data-enter-bound') === 'true') return;
-        ta.setAttribute('data-enter-bound', 'true');
-        
-        ta.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && !e.isComposing) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
-            ta.dispatchEvent(new Event('change', { bubbles: true }));
-            
-            const form = ta.closest('form');
-            let submitBtn = form ? form.querySelector('button[type="submit"], button[data-testid="stFormSubmitButton"]') : null;
-            if (!submitBtn) {
-              submitBtn = pDoc.querySelector('button[kind="primary"], button[data-testid="baseButton-primary"]');
-            }
-            if (submitBtn) {
-              setTimeout(() => { submitBtn.click(); }, 40);
-            }
-          }
-        });
-      });
-    } catch(e) {}
-  }
-  
-  setupEnter();
-  setInterval(setupEnter, 300);
-})();
-</script>
-""", height=0, width=0)
 
 
 def render_tab_belajar():
@@ -4050,12 +4004,11 @@ E. [Opsi]
 
         # ── SISTEM UTAMA: PARETO 80/20 (ZERO-PPT NEEDED · EVIDENCE-BASED) ──
         if st.session_state.get("study_mode", "").startswith("🏛️ Sistem Pareto 80/20"):
-            sub_t1, sub_t2, sub_t3, sub_t4, sub_t5 = st.tabs([
-                "📖 1. Catatan Master (Zero-PPT)",
-                "🎯 2. Socratic Active Recall (3 Soal)",
-                "📝 3. Simulasi Ujian Blok (C1-C6)",
-                "🃏 4. Flashcards & Ekspor Anki",
-                "🗺️ 5. Visual Mind Map"
+            sub_t1, sub_t2, sub_t3, sub_t4 = st.tabs([
+                "📖 Langkah 1: Catatan Master (Zero-PPT)",
+                "🎯 Langkah 2: Socratic Active Recall",
+                "📝 Langkah 3: Simulasi Ujian Kasus (C1-C6)",
+                "🗺️ Langkah 4: Visual Mind Map & Flashcard"
             ])
 
             # ── 1. CATATAN MASTER KLINIS (ZERO-PPT NEEDED) ──
@@ -4067,8 +4020,8 @@ E. [Opsi]
     <div>
       <div style="font-size:1.15rem; font-weight:800; color:#ffffff;">Buku Catatan Klinis Mandiri (Sintesis Penuh Zero-PPT)</div>
       <div style="font-size:0.78rem; color:#94a3b8; margin-top:3px; line-height:1.5;">
-        <strong>Dasar Riset:</strong> <em>Cognitive Load Theory</em> (Sweller et al., 2024), <em>Schema Construction</em> (van Merriënboer, 2019), &amp; <em>Prinsip Pareto 80/20</em> (Koch). 
-        Seluruh detail 50 slide dosen disintesis menjadi artikel kuliah komprehensif agar Anda <strong>tidak perlu lagi membuka file PPT aslinya</strong>.
+        <strong>Dasar Riset &amp; Standar:</strong> <em>Cognitive Load Theory</em> (Sweller et al., 2024), <em>Schema Construction</em> (van Merriënboer, 2019), &amp; <em>Standar Emas Konsensus Medis</em> (Harrison, Robbins, Guyton, Katzung).
+        Seluruh substansi 50 slide dosen disintesis menjadi buku ajar terstruktur agar Anda <strong>tidak perlu membuka file PPT aslinya lagi</strong>.
       </div>
     </div>
   </div>
@@ -4106,6 +4059,8 @@ E. [Opsi]
                             use_container_width=True
                         )
                     st.markdown(master_cache.get("content", ""))
+                    st.markdown("---")
+                    st.info("💡 **Langkah 1 Selesai Dibaca?** Lanjutkan mengunci alur sebab-akibat di tab **🎯 Langkah 2: Socratic Active Recall** di atas.")
                 else:
                     if not master_cache and not btn_regen_master:
                         st.info(f"💡 Modul kuliah **{sel}** (~{len(text):,} karakter teks sumber) siap disintesis menjadi Catatan Master Klinis Komprehensif.")
@@ -4116,62 +4071,80 @@ E. [Opsi]
                     if btn_gen_now:
                         ph_mn = st.empty()
                         prompt_mn = f"""Kamu adalah Profesor Kedokteran Senior, Guru Besar Biomedis, dan Penulis Buku Ajar Kedokteran Terkemuka (selevel Guyton, Robbins, Harrison, dan Katzung).
-Tugasmu adalah membedah dan mensintesis SELURUH materi slide kuliah berikut menjadi BUKU CATATAN KLINIS KOMPREHENSIF (Comprehensive Clinical Master Note).
+Tugasmu adalah membedah dan mensintesis SELURUH materi slide kuliah berikut menjadi BUKU CATATAN KLINIS KOMPREHENSIF (Comprehensive Clinical Master Note) berstandar emas.
 
 PRINSIP UTAMA:
-Mahasiswa kedokteran ini TIDAK PERLU MEMBUKA PPT ASLINYA LAGI. Seluruh substansi, fakta kritis, klasifikasi, alur patofisiologi, kriteria diagnosis, dan tata laksana dari ke-50 slide kuliah harus dirangkai menjadi artikel klinis yang sangat mendalam, kaya, mengalir, dan mudah dipahami.
+Mahasiswa kedokteran ini TIDAK PERLU MEMBUKA PPT ASLINYA LAGI. Seluruh substansi, fakta kritis, klasifikasi, alur patofisiologi molekuler-organ, kriteria diagnosis baku, dan tata laksana dari ke-50 slide kuliah harus dirangkai menjadi artikel klinis yang sangat mendalam, kaya, presisi, dan mudah dipahami.
 
 Materi Kuliah (Sumber):
 Judul: {sel}
 Isi Ekstraksi Slide:
 {text[:18000]}
 
-Gunakan Struktur Evidence-Based Pareto 80/20 berikut (Format Markdown murni):
+Gunakan Struktur Evidence-Based Pareto 80/20 & Konsensus Medis Baku berikut (Format Markdown murni):
 
 # 🏛️ {sel} — Catatan Master Klinis Komprehensif
-*Berdasarkan Cognitive Load Theory (Sweller, 2024), Schema Construction (van Merriënboer, 2019), & Prinsip Pareto 80/20.*
+*Berdasarkan Cognitive Load Theory (Sweller, 2024), Schema Construction (van Merriënboer, 2019), & Standar Konsensus Medis (Harrison, Robbins, Guyton, Katzung).*
 
 ---
 
-## ⚡ KAPSUL PARETO 80/20 (20% Konsep Kunci Penentu 80% Nilai Ujian & Kasus)
-> **Definisi Sentral:** [1-2 kalimat definisi baku medis yang presisi]
+## ⚡ KAPSUL PARETO 80/20 (20% Konsep Kunci Penentu 80% Nilai Ujian & Klinis)
+> **Definisi Sentral & Terminologi Medis:** [Definisi baku medis yang presisi beserta batasan klinisnya]
 > 
 > **Mekanisme Kausalitas Utama (The Master Key):** 
-> [Alur sebab-akibat patofisiologi/farmakodinamik inti: Stimulus/Etiologi → Jalur Molekuler/Reseptor → Perubahan Seluler/Organ → Manifestasi Klinis]
+> [Alur sebab-akibat patofisiologi/farmakodinamik inti: Stimulus/Etiologi → Reseptor/Jalur Molekuler → Perubahan Seluler/Histopatologi → Manifestasi Organ & Gejala]
 > 
-> **Golden Rules & Red Flags:**
+> **Trias/Tetrad Patognomonik & Red Flags (Tanda Bahaya):**
 > - [Gejala patognomonik / tanda khas yang wajib dihafal]
-> - [Kontraindikasi mutlak / kegawatan yang sering keluar di ujian]
+> - [Kontraindikasi mutlak / kegawatan yang sering menjadi jebakan ujian]
 > 
 > **Terapi Lini Pertama (Drug/Management of Choice):**
-> [Nama obat/intervensi lini pertama, mekanisme kerjanya, dan target terapinya]
+> [Nama obat/intervensi lini pertama, mekanisme kerja molekuler, dan target terapinya]
 
 ---
 
 ## 📖 PEMBEDAHAN MATERI LENGKAP & MENDALAM (ZERO-PPT NEEDED)
 
 ### 📌 Bab I: Fondasi Biomedis, Anatomi, & Fisiologi Terkait
-[Jelaskan struktur anatomi, histologi, atau prinsip fisiologi dasar yang menjadi panggung materi ini secara mendalam dan terstruktur]
+[Uraikan struktur anatomi, histologi, fisiologi normal, atau homeostasis seluler yang menjadi dasar materi ini secara terstruktur dan jelas]
 
 ### 📌 Bab II: Etiologi, Patogenesis, & Kaskade Molekuler Lengkap
-[Jelaskan mengapa penyakit/kondisi ini terjadi. Urai langkah demi langkah kaskade molekuler, sitokin, enzim, atau interaksi reseptor yang terlibat. Jangan hanya sebutkan nama, jelaskan mekanisme kausalitasnya!]
+[Uraikan rantai kausalitas patofisiologis lengkap:
+- Etiologi & faktor risiko.
+- Kaskade molekuler (sitokin, enzim, second messenger, interaksi reseptor).
+- Perubahan histopatologis & disfungsi organ.]
 
-### 📌 Bab III: Manifestasi Klinis, Trias/Tetrad Khas, & Kriteria Diagnosis
-[Uraikan gejala subjektif (anamnesis), tanda objektif (pemeriksaan fisik), dan pemeriksaan penunjang (Laboratorium, Radiologi/EKG, Gold Standard). Cantumkan nilai rujukan atau kriteria diagnostik resmi seperti WHO/AHA/KDIGO jika relevan]
+### 📌 Bab III: Manifestasi Klinis, Trias/Tetrad Khas, & Pendekatan Diagnostik
+[Uraikan:
+1. Anamnesis: Gejala subjektif khas, durasi, onset, faktor pemberat/peringan.
+2. Pemeriksaan Fisik: Tanda objektif patognomonik.
+3. Pemeriksaan Penunjang Bertingkat:
+   - Skrining awal (Lab darah rutin, urinalisis, dsb).
+   - Penunjang spesifik (Radiologi, EKG, Patologi Anatomi).
+   - Standar Emas (Gold Standard) penegakan diagnosis.
+4. Tabel Kriteria Diagnosis Resmi (mengacu pada konsensus resmi seperti WHO, ADA, AHA/ACC, KDIGO, GOLD, GINA jika relevan).]
 
-### 📌 Bab IV: Algoritma Tata Laksana Komprehensif (Farmakoterapi & Non-Farmakoterapi)
-[Uraikan strategi penanganan bertahap:
-1. Penanganan awal / gawat darurat (jika ada).
-2. Terapi definitif lini pertama (Mekanisme kerja obat, golongan, dosis penting, dan efek samping kritis).
-3. Terapi lini kedua / alternatif (jika ada resistensi atau kontraindikasi).
-4. Tata laksana non-farmakologis & edukasi pasien.]
+### 📌 Bab IV: Tabel Komparasi Diferensial Diagnosis (DDx)
+[Tabel komparasi 2-4 penyakit serupa yang sering mengecoh:
+| Penyakit / Kondisi | Karakteristik Khas | Temuan Penunjang Pembeda | Terapi Utama |]
 
-### 📌 Bab V: Komplikasi, Prognosis, & Jebakan Klinis (High-Yield Pearls)
-[Jelaskan apa risiko terburuk jika tidak diobati, prognosis penyakit, serta hal-hal kecil yang sering menjadi jebakan pada soal ujian dosen atau UKMPPD.]
+### 📌 Bab V: Algoritma Tata Laksana Komprehensif (Farmakoterapi & Non-Farmakoterapi)
+[Uraikan tata laksana bertingkat:
+1. Penanganan awal / kegawatdaruratan (ABCDE, stabilisasi).
+2. Tabel Farmakoterapi Lini 1, 2, dan 3:
+   | Lini Terapi | Golongan Obat | Contoh Generik | Mekanisme Kerja Molekuler (MOA) | Dosis / Indikasi Utama | Efek Samping Khas & Kontraindikasi |
+3. Terapi non-farmakologis, modifikasi gaya hidup, dan edukasi pasien.]
+
+### 📌 Bab VI: Komplikasi, Prognosis, & High-Yield Exam Pearls
+[Uraikan risiko jika tidak tertangani, prognosis klinis, serta poin-poin krusial yang paling sering dijadikan jebakan soal ujian blok kampus dan UKMPPD.]
 
 ---
-💡 **Mnemonik & Kunci Retensi Permanen:**
-[1-2 mnemonik cerdas atau jembatan keledai untuk mengingat klasifikasi atau poin tersulit materi ini.]
+💡 **Mnemonik Cerdas & Kunci Retensi Permanen:**
+[1-2 mnemonik cerdas untuk mempermudah menghafal klasifikasi atau konsep tersulit materi ini.]
+
+---
+📚 **Rujukan Ilmiah & Konsensus Baku:**
+[Cantumkan edisi buku teks standar: Harrison's Principles of Internal Medicine / Robbins Basic Pathology / Guyton & Hall / Katzung / Konsensus Nasional Terkait (PAPDI, PERKI, IDAI, POGI).]
 """
                         res_mn = stream_ai_transparent(api_key, prompt_mn, ph_mn)
                         if res_mn:
@@ -4315,30 +4288,30 @@ Format Evaluasi Metakognitif (Markdown):
                     if st.button("⚡ Rancang 6 Soal Campuran Tipe Kampus (AI) →", type="primary", key=f"btn_gen_exam_{sel}", use_container_width=True):
                         ph_ex = st.empty()
                         prompt_ex = f"""Kamu adalah Ketua Tim Pembuat Soal Ujian Blok Kedokteran dan Komite UKMPPD Nasional.
-Buatkan TEPAT 6 SOAL UJIAN PILIHAN GANDA CAMPURAN (Mixed Cognitive Levels C1-C6) berdasarkan materi kuliah ini:
+Buatkan TEPAT 6 SOAL UJIAN PILIHAN GANDA CAMPURAN (Mixed Cognitive Levels C1-C6) berstandar emas klinis berdasarkan materi kuliah ini:
 
 Materi:
 {text[:14000]}
 
 STRUKTUR DISTRIBUSI 6 SOAL (WAJIB):
-- Soal 1 & 2: Level 1 (C1-C2 Bloom) — Menguji Fondasi, Terminologi Medis, Nomenklatur, atau Definisi Anatomi/Klasifikasi.
-- Soal 3 & 4: Level 2 (C3-C4 Bloom) — Menguji Analisis Mekanisme, Hubungan Sebab-Akibat Patofisiologis, atau Farmakodinamik Obat.
-- Soal 5 & 6: Level 3 (C5-C6 Bloom) — Kasus Klinis Pasien di IGD/Puskesmas (Lengkap dengan usia, jenis kelamin, keluhan utama, tanda vital, hasil lab/penunjang) dengan Jebakan Diferensial Diagnosis atau Keputusan Terapi Kritis (Gaya UKMPPD).
+- Soal 1 & 2: Level 1 (C1-C2 Bloom) — Menguji Fondasi Biomedis, Terminologi Medis, Nomenklatur, atau Klasifikasi Baku.
+- Soal 3 & 4: Level 2 (C3-C4 Bloom) — Menguji Analisis Kausalitas Patofisiologis, Mekanisme Kerja Molekuler Obat (Farmakodinamik), atau Interpretasi Penunjang.
+- Soal 5 & 6: Level 3 (C5-C6 Bloom) — Clinical Vignette Pasien Nyata (Lengkap dengan usia, jenis kelamin, keluhan utama dengan onset/durasi, tanda vital lengkap [TD, HR, RR, Suhu, SpO2], temuan pemeriksaan fisik khas, dan hasil lab/penunjang). Pertanyaan klinis terarah mengenai diagnosis kerja, pemeriksaan baku emas, atau terapi lini pertama terpilih (Gaya Soal UKMPPD / CBT Nasional).
 
 Format JSON murni WAJIB (Array of 6 Objects):
 [
   {{
     "id": 1,
     "level": "Level 1 (C1-C2: Fondasi & Definisi)",
-    "question": "Seorang mahasiswa...",
+    "question": "Pertanyaan...",
     "options": ["A. ...", "B. ...", "C. ...", "D. ...", "E. ..."],
     "correct_letter": "A",
-    "rationale": "Penjelasan mengapa opsi ini benar secara ilmiah...",
-    "distractor_analysis": "Mengapa opsi lain salah / menjadi pengecoh..."
+    "rationale": "Penjelasan ilmiah lengkap mengapa opsi ini benar berdasarkan patofisiologi/konsensus...",
+    "distractor_analysis": "Analisis mengapa tiap opsi pengecoh (B, C, D, E) salah atau kondisi apa yang mencocokinya..."
   }},
   ...
 ]
-Hanya berikan JSON tanpa teks markdown tambahan!
+Hanya berikan JSON tanpa teks markdown pembungkus di luar array!
 """
                         raw_ex = stream_ai_transparent(api_key, prompt_ex, ph_ex)
                         data_ex = extract_json_safely(raw_ex)
@@ -4391,50 +4364,20 @@ Hanya berikan JSON tanpa teks markdown tambahan!
                     elif exam_cache.get("raw_text"):
                         st.markdown(exam_cache.get("raw_text"))
 
-            # ── 4. FLASHCARD & SPACED REPETITION (SM-2) ──
+                    st.markdown("---")
+                    st.info("💡 **Simulasi Kasus Selesai?** Petakan arsitektur konsep dan drill flashcards di tab **🗺️ Langkah 4: Visual Mind Map & Flashcard** di atas.")
+
+            # ── 4. VISUAL MIND MAP & FLASHCARDS (DUAL CODING & SPACING) ──
             with sub_t4:
-                st.markdown('''
-<div style="background:linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(99,102,241,0.08) 100%); border:1.5px solid rgba(168,85,247,0.35); border-radius:12px; padding:16px 20px; margin-bottom:16px;">
-  <div style="display:flex; align-items:center; gap:12px;">
-    <span style="font-size:28px;">🃏</span>
-    <div>
-      <div style="font-size:1.15rem; font-weight:800; color:#ffffff;">Flashcards &amp; Konsolidasi Memori Spaced Repetition (SM-2)</div>
-      <div style="font-size:0.78rem; color:#94a3b8; margin-top:3px; line-height:1.5;">
-        <strong>Dasar Riset:</strong> <em>Ebbinghaus Forgetting Curve</em> &amp; <em>SuperMemo SM-2 Algorithm</em> (Wozniak, 1990; Cepeda et al., 2008).
-        Tinjau kartu konsep di ambang lupa untuk memicu neuroplastisitas dan transfer memori ke neokorteks jangka panjang.
-      </div>
-    </div>
-</div>
-''', unsafe_allow_html=True)
-
-                anki_tsv = generate_anki_export_tsv(sel)
-                if anki_tsv:
-                    c_ank1, c_ank2 = st.columns([3.2, 1.8], vertical_alignment="center")
-                    with c_ank1:
-                        st.markdown("<span style='font-size:0.8rem;color:#cbd5e1;'>📦 <strong>Ekspor ke Anki:</strong> Pelajari kartu ini secara offline di HP/Laptop melalui aplikasi Anki resmi.</span>", unsafe_allow_html=True)
-                    with c_ank2:
-                        st.download_button(
-                            label="📥 Unduh Deck Anki (.txt)",
-                            data=anki_tsv,
-                            file_name=f"{re.sub(r'[^a-zA-Z0-9_]', '_', sel)}_Anki.txt",
-                            mime="text/tab-separated-values",
-                            key=f"btn_dl_anki_{sel}",
-                            use_container_width=True
-                        )
-
-                render_flashcards_widget(sel, text, api_key, "PARETO_8020", key_prefix="study_tab")
-
-            # ── 5. MIND MAP VISUAL INTERAKTIF (DUAL CODING) ──
-            with sub_t5:
                 st.markdown('''
 <div style="background:linear-gradient(135deg, rgba(56,189,248,0.12) 0%, rgba(99,102,241,0.08) 100%); border:1.5px solid rgba(56,189,248,0.35); border-radius:12px; padding:16px 20px; margin-bottom:16px;">
   <div style="display:flex; align-items:center; gap:12px;">
     <span style="font-size:28px;">🗺️</span>
     <div>
-      <div style="font-size:1.15rem; font-weight:800; color:#ffffff;">Visual Mind Map Interaktif (Dual Coding Theory)</div>
+      <div style="font-size:1.15rem; font-weight:800; color:#ffffff;">Visual Mind Map &amp; Flashcards Interaktif (Dual Coding &amp; Spacing)</div>
       <div style="font-size:0.78rem; color:#94a3b8; margin-top:3px; line-height:1.5;">
-        <strong>Dasar Riset:</strong> <em>Dual Coding Theory</em> (Paivio, 1991; Schroeder et al., 2018 meta-analisis g = 0.58–0.72).
-        Pohon konsep hierarkis untuk memetakan arsitektur global materi kuliah dalam sekali pandang.
+        <strong>Dasar Riset:</strong> <em>Dual Coding Theory</em> (Clark &amp; Paivio, 1991; Schroeder et al., 2018 meta-analisis g = 0.58–0.72) &amp; <em>Spacing Effect</em>.
+        Pohon konsep visual hierarkis untuk memetakan arsitektur global materi kuliah dalam sekali pandang, disempurnakan dengan kartu memori kilat dan ekspor Anki.
       </div>
     </div>
   </div>
@@ -4452,23 +4395,24 @@ Hanya berikan JSON tanpa teks markdown tambahan!
                 if not map_cache:
                     if st.button("⚡ Bangun Peta Konsep Visual Interaktif (AI)", type="primary", key=f"btn_gen_mm_{sel}", use_container_width=True):
                         ph_mm = st.empty()
-                        prompt_mm = f"""Kamu adalah pakar visualisasi kognitif dan ilmu medis.
+                        prompt_mm = f"""Kamu adalah pakar visualisasi kognitif dan ilmu kedokteran.
 Buat MIND MAP HIERARKIS LENGKAP & MENDALAM dari substansi ilmiah materi kuliah berikut dalam Bahasa Indonesia.
 
 Format WAJIB menggunakan struktur Markdown murni (Heading # dan List bertingkat) yang rapi:
 
 # [Batang Utama / Topik Pokok Medis]
-## 📌 [Cabang Utama 1: Pilar Konsep/Tema]
+## 📌 [Cabang Utama 1: Fondasi Biomedis / Anatomi Terkait]
 - [Ranting 1a: Klasifikasi / Prinsip]
-  - [Detail / Contoh Obat / Gejala / Fakta Klinis 1a.1]
-  - [Detail / Contoh Obat / Gejala / Fakta Klinis 1a.2]
-## 📌 [Cabang Utama 2: Pilar Konsep/Tema]
-- [Ranting 2a]
+  - [Detail / Fakta Klinis 1a.1]
+  - [Detail / Fakta Klinis 1a.2]
+## 📌 [Cabang Utama 2: Patofisiologi & Kaskade Molekuler]
+- [Ranting 2a: Kausalitas Inti]
   - [Detail 2a.1]
-## 📌 [Cabang Utama 3]
-... (buat minimal 4-6 cabang utama lengkap sampai ke contoh konkret/obat/fakta klinis)
+## 📌 [Cabang Utama 3: Manifestasi Klinis & Penegakan Diagnosis]
+... (buat minimal 4-6 cabang utama lengkap sampai ke tata laksana dan contoh obat konkret)
 
-Materi:\n{text[:12000]}"""
+Materi:
+{text[:12000]}"""
                         map_cache = stream_ai_transparent(api_key, prompt_mm, ph_mm)
                         if map_cache:
                             st.session_state.phase_data["map_md"] = map_cache
@@ -4483,6 +4427,44 @@ Materi:\n{text[:12000]}"""
                     st.markdown('</div>', unsafe_allow_html=True)
                     with st.expander("📋 Lihat Outline Teks Mind Map", expanded=False):
                         st.markdown(map_cache)
+
+                st.markdown("<br/>", unsafe_allow_html=True)
+                st.markdown("#### 🃏 Flashcards Memori Kilat & Ekspor Anki")
+                anki_tsv = generate_anki_export_tsv(sel)
+                if anki_tsv:
+                    c_ank1, c_ank2 = st.columns([3.2, 1.8], vertical_alignment="center")
+                    with c_ank1:
+                        st.markdown("<span style='font-size:0.8rem;color:#cbd5e1;'>📦 <strong>Ekspor ke Anki:</strong> Pelajari kartu ini secara offline di HP/Laptop melalui aplikasi Anki resmi.</span>", unsafe_allow_html=True)
+                    with c_ank2:
+                        st.download_button(
+                            label="📥 Unduh Deck Anki (.txt)",
+                            data=anki_tsv,
+                            file_name=f"{re.sub(r'[^a-zA-Z0-9_]', '_', sel)}_Anki.txt",
+                            mime="text/tab-separated-values",
+                            key=f"btn_dl_anki_{sel}",
+                            use_container_width=True
+                        )
+
+                render_flashcards_widget(sel, text, api_key, "PARETO_8020", key_prefix="study_tab")
+
+                # ── 5. COMPLETION HERO CARD ──
+                st.markdown("---")
+                with st.container(border=True):
+                    c_fin1, c_fin2 = st.columns([3.5, 1.5], vertical_alignment="center")
+                    with c_fin1:
+                        st.markdown(f"""
+                        <div style="font-size:1.1rem;font-weight:800;color:#ffffff;">🎉 Selesai Siklus 4 Langkah Modul Ini!</div>
+                        <div style="font-size:0.82rem;color:#94a3b8;margin-top:2px;line-height:1.5;">
+                          Anda telah menuntaskan Catatan Master, Socratic Active Recall, Ujian Kasus C1-C6, dan Visual Mind Map. Kunci pencapaian ini ke memori jangka panjang agar algoritma SuperMemo SM-2 menjadwalkan repetisi berkala sebelum daya ingat menurun.
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with c_fin2:
+                        if st.button("🚀 Catat Selesai (SM-2) ✓", type="primary", use_container_width=True, key=f"btn_finish_study_cycle_{sel}"):
+                            iv = update_sr(sel, 4)
+                            st.session_state.completed = True
+                            st.balloons()
+                            st.success(f"🎉 Sesi belajar dicatat! Jadwal review berikutnya: {iv} hari lagi.")
+                            st.rerun()
 
             return # Selesai mode Pareto 80/20
 
@@ -5140,11 +5122,14 @@ def render_tab_review():
     ''', unsafe_allow_html=True)
     
     rev_sub1, rev_sub2 = st.tabs([
-        "🃏 Flashcards Interaktif & Ekspor Anki",
-        "📅 Jadwal & Spaced Repetition (SM-2)"
+        "📅 Antrean Review Harian (SM-2)",
+        "🃏 Flashcards Interaktif & Ekspor Anki"
     ])
     
     with rev_sub1:
+        render_sub_spaced_repetition()
+
+    with rev_sub2:
         if not mats:
             st.info("Belum ada materi kuliah untuk direview.")
         else:
@@ -5170,31 +5155,26 @@ def render_tab_review():
             mat_info = mats.get(sel_fc, {})
             api_k = load_config().get("api_key", "")
             render_flashcards_widget(sel_fc, mat_info.get("text", ""), api_k, "PARETO_8020", key_prefix="review_tab")
-            
-    with rev_sub2:
-        render_sub_spaced_repetition()
 
-def render_tab_pengaturan():
+
+def render_tab_spesialis_dan_akun():
     st.markdown('''
     <div style="margin-bottom:16px;">
-      <div style="font-size:1.5rem;font-weight:800;color:#f8fafc;letter-spacing:-0.5px;">⚙️ Pengaturan Sistem, Cloud &amp; Penguji Beta</div>
-      <div style="color:#94a3b8;font-size:0.85rem;margin-top:2px;">Kelola sinkronisasi Google Drive 208 modul, konsultasi dewan dokter spesialis AI, dan hub evaluasi penguji.</div>
+      <div style="font-size:1.5rem;font-weight:800;color:#f8fafc;letter-spacing:-0.5px;">🩺 Konsultasi Spesialis, Evaluasi Penguji &amp; Akun</div>
+      <div style="color:#94a3b8;font-size:0.85rem;margin-top:2px;">Konsultasi dewan dokter spesialis AI, evaluasi penguji sejawat (beta testing), dan manajemen profil akun Anda.</div>
     </div>
     ''', unsafe_allow_html=True)
     
-    p_t1, p_t2, p_t3, p_t4 = st.tabs([
-        "☁️ Perpustakaan Cloud (208 Modul)",
-        "🩺 Dewan Dokter Spesialis AI",
-        "💬 Hub Uji Coba & Feedback Beta",
-        "👤 Profil & Akun"
+    p_t1, p_t2, p_t3 = st.tabs([
+        "🩺 Dewan Dokter Spesialis AI (5 Departemen)",
+        "💬 Hub Uji Coba & Feedback Penguji",
+        "👤 Profil & Pengaturan Akun"
     ])
     with p_t1:
-        render_sub_cloud_library()
-    with p_t2:
         render_sub_specialist_council()
-    with p_t3:
+    with p_t2:
         render_sub_beta_tester()
-    with p_t4:
+    with p_t3:
         user_inf = st.session_state.get("user_info") or {}
         st.markdown(f'''
         <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:16px;">
@@ -5227,13 +5207,17 @@ def render_tab_pengaturan():
                 st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════
-# MAIN 3-TAB CONTAINER: RAPI, SIMPEL, DAN POWERFUL
+# MAIN 4-TAB NAVIGATION: RAPI, SIMPEL, TERSTRUKTUR & BERBASIS KEILMUAN
 # ══════════════════════════════════════════════════════════════════════
-tab_belajar, tab_review, tab_pengaturan = st.tabs([
-    "📖  Ruang Belajar Materi",
-    "🗂️  Review Harian & Flashcard",
-    "⚙️  Akun, Cloud & Penguji Beta"
+tab_kurikulum, tab_belajar, tab_review, tab_spesialis_akun = st.tabs([
+    "🏛️  Kurikulum & 208 Modul",
+    "📖  Meja Belajar Kognitif",
+    "🗂️  Review Harian & Anki (SM-2)",
+    "🩺  Konsultasi Spesialis & Akun"
 ])
+
+with tab_kurikulum:
+    render_sub_cloud_library()
 
 with tab_belajar:
     render_tab_belajar()
@@ -5241,5 +5225,58 @@ with tab_belajar:
 with tab_review:
     render_tab_review()
 
-with tab_pengaturan:
-    render_tab_pengaturan()
+with tab_spesialis_akun:
+    render_tab_spesialis_dan_akun()
+
+# ── PERMANENT MEDICOLEGAL SAFE HARBOR DISCLAIMER (FOOTER) ────────────────────
+st.markdown("""
+<div style="margin-top: 40px; padding: 16px 20px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; text-align: center;">
+  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; font-weight: 800; color: #f87171; text-transform: uppercase; letter-spacing: 0.5px;">
+    <span>⚠️</span> PEMBERITAHUAN MEDIKOLEGAL & KEBIJAKAN PENGGUNAAN AMAN (SAFE HARBOR)
+  </div>
+  <div style="font-size: 0.73rem; color: #94a3b8; line-height: 1.6; max-width: 950px; margin: 6px auto 0;">
+    <strong>NeuroStudy adalah simulator dan platform edukasi kognitif medis semata.</strong> Seluruh materi, simulasi kasus IGD, kalkulasi dosis, dan rekomendasi terapi yang dihasilkan oleh model AI dirancang khusus untuk keperluan latihan akademis mahasiswa dan persiapan ujian blok/UKMPPD. Konten ini <u>BUKAN</u> merupakan protokol medis resmi, panduan peresepan klinis riil, atau pengganti keputusan dokter berlisensi. Dalam menangani pasien nyata di rumah sakit, selalu verifikasi ke standar emas (Fornas, PNPK Kemenkes, FDA, IDI) dan supervisi dokter penanggung jawab pelayanan (DPJP).
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ── DIRECT ENTER SUBMIT INJECTOR (POST-RENDER) ────────────────────────────────
+components.html("""
+<script>
+(function() {
+  function setupEnter() {
+    try {
+      const pDoc = window.parent.document;
+      const textareas = pDoc.querySelectorAll('textarea');
+      textareas.forEach(ta => {
+        if (ta.getAttribute('data-enter-bound') === 'true') return;
+        ta.setAttribute('data-enter-bound', 'true');
+        
+        ta.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && !e.isComposing) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+            ta.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            const form = ta.closest('form');
+            let submitBtn = form ? form.querySelector('button[type="submit"], button[data-testid="stFormSubmitButton"]') : null;
+            if (!submitBtn) {
+              submitBtn = pDoc.querySelector('button[kind="primary"], button[data-testid="baseButton-primary"]');
+            }
+            if (submitBtn) {
+              setTimeout(() => { submitBtn.click(); }, 40);
+            }
+          }
+        });
+      });
+    } catch(e) {}
+  }
+  
+  setupEnter();
+  setInterval(setupEnter, 300);
+})();
+</script>
+""", height=0, width=0)
+
