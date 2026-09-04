@@ -3151,53 +3151,59 @@ def render_sub_cloud_library():
             )
         )
 
-    st.markdown(f'<div style="font-size:0.75rem;color:#94a3b8;margin:2px 0 14px;">Menampilkan <strong>{len(filtered_items)}</strong> dari {len(mats)} materi kuliah</div>', unsafe_allow_html=True)
+    c_sub_meta1, c_sub_meta2 = st.columns([3.4, 1.6], vertical_alignment="center")
+    with c_sub_meta1:
+        st.markdown(f'<div style="font-size:0.78rem;color:#94a3b8;margin:2px 0 6px;">Menampilkan <strong>{len(filtered_items)}</strong> dari {len(mats)} materi kuliah · <span style="color:#818cf8;font-weight:700;">↕ Kotak Scroll Netap</span></div>', unsafe_allow_html=True)
+    with c_sub_meta2:
+        full_page_scroll = st.toggle("Mode Halaman Penuh", value=False, key="toggle_lib_full_scroll", help="Aktifkan jika ingin melihat daftar panjang tanpa batas kotak scroll.")
 
     if not mats:
         st.markdown('<div class="card card-sm"><div class="cs" style="text-align:center;">Belum ada materi kuliah tersimpan.</div></div>', unsafe_allow_html=True)
     elif not filtered_items:
         st.markdown(f'<div class="card card-sm"><div class="cs" style="text-align:center;">Tidak ada materi yang cocok dengan filter atau pencarian "{search_kw}".</div></div>', unsafe_allow_html=True)
-
-    # ── 4. RESPONSIVE TWO-COLUMN GRID OF MATERIAL CARDS ──
-    col_left, col_right = st.columns(2, gap="medium")
-    cols = [col_left, col_right]
-    
-    for idx_item, (nm, md) in enumerate(filtered_items):
-        target_col = cols[idx_item % 2]
-        with target_col:
-            n_ses = md.get("sessions", 0)
-            n_rev = md.get("review_count", 0)
-            has_studied = (n_ses > 0 or n_rev > 0)
-            bd = days_badge(md.get("next_review",""), n_ses, n_rev)
-            retention_pct = calculate_memory_retention(md)
+    else:
+        # ── 4. RESPONSIVE TWO-COLUMN GRID OF MATERIAL CARDS (FIXED SCROLL CONTAINER) ──
+        container_kwargs = {"height": 620} if not full_page_scroll else {}
+        with st.container(**container_kwargs):
+            col_left, col_right = st.columns(2, gap="medium")
+            cols = [col_left, col_right]
             
-            if has_studied and retention_pct is not None:
-                ret_color = "#34d399" if retention_pct >= 75 else ("#f59e0b" if retention_pct >= 50 else "#ef4444")
-                ret_label = "Kuat" if retention_pct >= 75 else ("Menurun" if retention_pct >= 50 else "Kritis (Review Segera)")
-                ret_text = f"{retention_pct}% ({ret_label})"
-                bar_width = f"{retention_pct}%"
-                bar_bg = ret_color
-                meta_txt = f"{n_ses} sesi · {n_rev}× review · EF {md.get('ease_factor',2.5):.1f}"
-            else:
-                ret_color = "#94a3b8"
-                ret_text = "⚪ Belum Dipelajari"
-                bar_width = "0%"
-                bar_bg = "rgba(148, 163, 184, 0.2)"
-                meta_txt = "Belum ada sesi · Siap dipelajari"
-            
-            with st.container(border=True):
-                # Header & Info
-                c_mat_h1, c_mat_h2 = st.columns([3.6, 1.4], vertical_alignment="center")
-                with c_mat_h1:
-                    st.markdown(f'''
+            for idx_item, (nm, md) in enumerate(filtered_items):
+                target_col = cols[idx_item % 2]
+                with target_col:
+                    n_ses = md.get("sessions", 0)
+                    n_rev = md.get("review_count", 0)
+                    has_studied = (n_ses > 0 or n_rev > 0)
+                    bd = days_badge(md.get("next_review",""), n_ses, n_rev)
+                    retention_pct = calculate_memory_retention(md)
+                    
+                    if has_studied and retention_pct is not None:
+                        ret_color = "#34d399" if retention_pct >= 75 else ("#f59e0b" if retention_pct >= 50 else "#ef4444")
+                        ret_label = "Kuat" if retention_pct >= 75 else ("Menurun" if retention_pct >= 50 else "Kritis (Review Segera)")
+                        ret_text = f"{retention_pct}% ({ret_label})"
+                        bar_width = f"{retention_pct}%"
+                        bar_bg = ret_color
+                        meta_txt = f"{n_ses} sesi · {n_rev}× review · EF {md.get('ease_factor',2.5):.1f}"
+                    else:
+                        ret_color = "#94a3b8"
+                        ret_text = "⚪ Belum Dipelajari"
+                        bar_width = "0%"
+                        bar_bg = "rgba(148, 163, 184, 0.2)"
+                        meta_txt = "Belum ada sesi · Siap dipelajari"
+                    
+                    with st.container(border=True):
+                        # Header & Info
+                        c_mat_h1, c_mat_h2 = st.columns([3.6, 1.4], vertical_alignment="center")
+                        with c_mat_h1:
+                            st.markdown(f'''
 <div style="font-size:0.95rem;font-weight:800;color:#ffffff;line-height:1.3;">📄 {nm}</div>
 <div style="font-size:0.7rem;color:#94a3b8;margin-top:2px;">{meta_txt}</div>
 ''', unsafe_allow_html=True)
-                with c_mat_h2:
-                    st.markdown(f'<div style="text-align:right;">{bd}</div>', unsafe_allow_html=True)
-                
-                # Ebbinghaus Metacognitive Retention Gauge
-                st.markdown(f'''
+                        with c_mat_h2:
+                            st.markdown(f'<div style="text-align:right;">{bd}</div>', unsafe_allow_html=True)
+                        
+                        # Ebbinghaus Metacognitive Retention Gauge
+                        st.markdown(f'''
 <div style="margin:8px 0 10px;">
   <div style="display:flex;justify-content:space-between;font-size:0.7rem;font-weight:700;margin-bottom:3px;">
     <span style="color:#94a3b8;">Kekuatan Retensi Memori:</span>
@@ -3208,38 +3214,38 @@ def render_sub_cloud_library():
   </div>
 </div>
 ''', unsafe_allow_html=True)
-                
-                # Clean Action Row (Main Action + Quick Power Tools Popover)
-                c_act_main, c_act_tools = st.columns([3.0, 1.0], vertical_alignment="center")
-                safe_k = re.sub(r'[^a-zA-Z0-9_]', '_', nm)
-                with c_act_main:
-                    btn_label = f"🚀 Lanjut ({nm[:18]}…)" if has_studied else f"🚀 Mulai Belajar ({nm[:18]}…)"
-                    if st.button(btn_label, type="primary", use_container_width=True, key=f"btn_start_sesi_{safe_k}"):
-                        st.session_state.mat_sel = nm
-                        st.session_state.selected_notify = nm
-                        for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
-                            if nm.startswith(f"[{b}]"):
-                                st.session_state.t2_blok_selector = b
-                                break
-                        st.session_state.session_started = True
-                        st.session_state.phase = 0
-                        st.session_state.switch_tab_target = "Meja Belajar"
-                        st.session_state.auto_gen_master = True
-                        st.rerun()
-                with c_act_tools:
-                    with st.popover("⚡ Fitur", use_container_width=True):
-                        st.markdown(f"**⚡ Power Tools: {nm[:22]}...**")
-                        if st.button("🎯 Bedah Jebakan Ujian", key=f"btn_v_{safe_k}", use_container_width=True):
-                            with st.spinner("Dr. Marcus Vance sedang membedah jebakan..."):
-                                prompt_v = f"Kamu adalah Dr. Marcus Vance, Sp.FK. Bedah 3 jebakan soal pilihan ganda paling mematikan pada materi: {md.get('text','')[:7000]}"
-                                stream_ai_transparent(api_key, prompt_v, st.empty())
-                        if st.button("🩺 Kasus Klinis IGD", key=f"btn_t_{safe_k}", use_container_width=True):
-                            with st.spinner("Dr. Aris Thorne menyiapkan simulasi IGD..."):
-                                prompt_t = f"Kamu adalah Dr. Aris Thorne, Sp.PD. Buat 1 simulasi kasus pasien darurat di IGD berdasarkan materi ini: {md.get('text','')[:7000]}"
-                                stream_ai_transparent(api_key, prompt_t, st.empty())
-                        if st.button("📄 Medical Cheat Sheet", key=f"btn_cs_{safe_k}", use_container_width=True):
-                            with st.spinner("Menyusun Cheat Sheet..."):
-                                cs_p = f"""Buat RANGKUMAN EKSEKUTIF 1 HALAMAN (Medical Cheat Sheet) yang sangat padat, terstruktur, dan siap cetak dari materi ini:
+                        
+                        # Clean Action Row (Main Action + Quick Power Tools Popover)
+                        c_act_main, c_act_tools = st.columns([3.0, 1.0], vertical_alignment="center")
+                        safe_k = re.sub(r'[^a-zA-Z0-9_]', '_', nm)
+                        with c_act_main:
+                            btn_label = f"🚀 Lanjut ({nm[:18]}…)" if has_studied else f"🚀 Mulai Belajar ({nm[:18]}…)"
+                            if st.button(btn_label, type="primary", use_container_width=True, key=f"btn_start_sesi_{safe_k}"):
+                                st.session_state.mat_sel = nm
+                                st.session_state.selected_notify = nm
+                                for b in ["BDT", "BMS 1", "BUAMS", "BMS 2", "BMS 3", "BMS 4", "BMD"]:
+                                    if nm.startswith(f"[{b}]"):
+                                        st.session_state.t2_blok_selector = b
+                                        break
+                                st.session_state.session_started = True
+                                st.session_state.phase = 0
+                                st.session_state.switch_tab_target = "Meja Belajar"
+                                st.session_state.auto_gen_master = True
+                                st.rerun()
+                        with c_act_tools:
+                            with st.popover("⚡ Fitur", use_container_width=True):
+                                st.markdown(f"**⚡ Power Tools: {nm[:22]}...**")
+                                if st.button("🎯 Bedah Jebakan Ujian", key=f"btn_v_{safe_k}", use_container_width=True):
+                                    with st.spinner("Dr. Marcus Vance sedang membedah jebakan..."):
+                                        prompt_v = f"Kamu adalah Dr. Marcus Vance, Sp.FK. Bedah 3 jebakan soal pilihan ganda paling mematikan pada materi: {md.get('text','')[:7000]}"
+                                        stream_ai_transparent(api_key, prompt_v, st.empty())
+                                if st.button("🩺 Kasus Klinis IGD", key=f"btn_t_{safe_k}", use_container_width=True):
+                                    with st.spinner("Dr. Aris Thorne menyiapkan simulasi IGD..."):
+                                        prompt_t = f"Kamu adalah Dr. Aris Thorne, Sp.PD. Buat 1 simulasi kasus pasien darurat di IGD berdasarkan materi ini: {md.get('text','')[:7000]}"
+                                        stream_ai_transparent(api_key, prompt_t, st.empty())
+                                if st.button("📄 Medical Cheat Sheet", key=f"btn_cs_{safe_k}", use_container_width=True):
+                                    with st.spinner("Menyusun Cheat Sheet..."):
+                                        cs_p = f"""Buat RANGKUMAN EKSEKUTIF 1 HALAMAN (Medical Cheat Sheet) yang sangat padat, terstruktur, dan siap cetak dari materi ini:
 Materi:
 {md.get('text','')[:7000]}
 
@@ -3248,17 +3254,17 @@ Format WAJIB:
 2. **📊 Tabel Obat / Klasifikasi:** (Golongan, Contoh, Efek Utama, Efek Samping Kritis)
 3. **⚠️ 3 Aturan Emas Klinis:** (Peringatan penting di ranjang pasien)
 4. **💡 Mnemonik Klinis:** (Cara cepat mengingat fakta rumit)"""
-                                stream_ai_transparent(api_key, cs_p, st.empty())
-                        cards = load_flashcards(nm)
-                        if cards:
-                            st.download_button(
-                                label="📥 Unduh Anki (.tsv)",
-                                data=generate_anki_export_data(cards, nm),
-                                file_name=f"{nm}_anki.txt",
-                                mime="text/plain",
-                                key=f"dl_anki_{safe_k}",
-                                use_container_width=True
-                            )
+                                        stream_ai_transparent(api_key, cs_p, st.empty())
+                                cards = load_flashcards(nm)
+                                if cards:
+                                    st.download_button(
+                                        label="📥 Unduh Anki (.tsv)",
+                                        data=generate_anki_export_data(cards, nm),
+                                        file_name=f"{nm}_anki.txt",
+                                        mime="text/plain",
+                                        key=f"dl_anki_{safe_k}",
+                                        use_container_width=True
+                                    )
 
     # ── 5. OPTIONAL ADVANCED TOOLS EXPANDER (MANUAL UPLOAD & ZIP BACKUP) ──
     st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
