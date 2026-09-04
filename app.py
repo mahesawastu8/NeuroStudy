@@ -1774,11 +1774,11 @@ Output WAJIB berupa JSON ARRAY MURNI tanpa teks pembuka/penutup, format:
   }}
 ]"""
     genai.configure(api_key=api_key)
-    candidate_models = ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-flash-lite-latest"]
+    candidate_models = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.5-flash", "gemini-3.6-flash"]
     for m_name in candidate_models:
         try:
             m = genai.GenerativeModel(m_name)
-            resp = m.generate_content(prompt, request_options={"timeout": 25})
+            resp = m.generate_content(prompt, request_options={"timeout": 12})
             raw = resp.text.strip()
             if "```json" in raw: raw = raw.split("```json")[1].split("```")[0]
             elif "```" in raw: raw = raw.split("```")[1].split("```")[0]
@@ -2092,7 +2092,7 @@ def stream_ai_transparent(api_key, prompt, ph):
     100% Transparent Real-Time Stream Engine:
     - Streams AI's internal reasoning (<thinking>...</thinking>) in a live glowing terminal box
     - Streams AI's actual output in real-time as tokens arrive with live cursor
-    - Sub-second first-token latency with zero-delay fallback
+    - Sub-second first-token latency with ultra-fast Gemini flash-lite models
     """
     ph.markdown("""
 <div class="thinking-live-box">
@@ -2101,7 +2101,7 @@ def stream_ai_transparent(api_key, prompt, ph):
       <span class="live-dot"></span>
       🧠 PROSES PENALARAN AKTIF AI
     </div>
-    <span style="font-size:0.72rem;color:#94a3b8;">Mulai menganalisis...</span>
+    <span style="font-size:0.72rem;color:#94a3b8;">Menghubungkan ke neural engine (sub-detik)...</span>
   </div>
   <div class="thinking-live-text"><span class="cur"></span></div>
 </div>
@@ -2109,39 +2109,45 @@ def stream_ai_transparent(api_key, prompt, ph):
 
     genai.configure(api_key=api_key)
     
-    thinking_instruction = (
-        "INSTRUKSI PEDAGOGI EMAS — PALING ENAK DIPAHAMI, HANGAT & MENGALIR:\n"
-        "Kamu adalah Mentor Klinis & Guru Besar Kedokteran terbaik yang sangat dicintai mahasiswa karena kemampuanmu mengubah materi tersulit menjadi SANGAT JELAS, ENAK DIPAHAMI, dan NEMPEL PERMANEN di kepala.\n"
-        "Sebelum menulis jawaban/output akhir, kamu WAJIB menulis proses berpikir dan analisismu secara langsung dan mengalir dalam Bahasa Indonesia di dalam tag <thinking>...</thinking>.\n"
-        "Setelah tag </thinking>, susun penjelasanmu dengan STRUKTUR 4-PILAR YANG SANGAT ENAK DIBACA:\n"
-        "1. 💡 ANALOGI MEMBUMI: Awali dengan 1 analogi sederhana kehidupan nyata (benda/peristiwa sehari-hari) agar konsep langsung 'klik' di otak kanan.\n"
-        "2. 🧬 MEKANISME MEDIS & KAUSALITAS: Jelaskan prinsip biologi/farmakologi sebab-akibat dengan poin-poin ringkas, tegas, dan tebalkan (bold) istilah kuncinya.\n"
-        "3. 🩺 APLIKASI KLINIS DI RANJANG PASIEN: Bagaimana dokter menerapkannya saat menangani pasien atau mencegah kegagalan terapi.\n"
-        "4. 🔑 KUNCI HAFALAN 1 MENIT: Buat 1 kalimat intisari atau mnemonik cerdas yang mengunci memori jangka panjang.\n\n"
-        "PERATURAN MUTLAK:\n"
-        "1. Hindari kalimat bertele-tele dan dinding teks panjang. Gunakan bullet point rapi dan spasi yang lega.\n"
-        "2. DILARANG menggunakan notasi LaTeX mentah seperti $E_{max}$ atau kurung kurawal. Gunakan teks ilmiah bersih: Emax, EC50, alfa, beta, dsb.\n"
-        "3. Gunakan nada bicara mentor yang bijak, hangat, apresiatif, dan membuat mahasiswa merasa pintar & bersemangat belajar.\n\n"
-    )
-    full_prompt = thinking_instruction + prompt
+    # Intelligently adapt thinking instruction to prevent conflicting prompt rules
+    if "Catatan Master Klinis Komprehensif" in prompt or "Pareto 80/20" in prompt:
+        full_prompt = (
+            "Sebelum menulis catatan master, tuliskan 1-3 kalimat intisari penalaranmu di dalam tag <thinking>...</thinking>.\n"
+            "Setelah tag </thinking>, langsung susun Catatan Master sesuai struktur markdown yang diminta secara lengkap, mendalam, dan presisi:\n\n"
+        ) + prompt
+    else:
+        thinking_instruction = (
+            "INSTRUKSI PEDAGOGI EMAS — HANGAT & MENGALIR:\n"
+            "Sebelum menulis jawaban, kamu boleh menuliskan proses analisismu secara ringkas dalam tag <thinking>...</thinking>.\n"
+            "Setelah tag </thinking>, susun penjelasanmu dengan bahasa yang jelas, bersahabat, berbasis bukti ilmiah, dan mudah dipahami.\n"
+            "DILARANG menggunakan notasi LaTeX mentah ($). Gunakan simbol/teks biasa.\n\n"
+        )
+        full_prompt = thinking_instruction + prompt
 
     candidate_models = [
-        "gemini-3.6-flash",
         "gemini-3.5-flash-lite",
-        "gemini-flash-latest",
-        "gemini-flash-lite-latest"
+        "gemini-flash-lite-latest",
+        "gemini-3.5-flash",
+        "gemini-3.6-flash"
     ]
     
     last_err = ""
     for model_name in candidate_models:
         try:
             m = genai.GenerativeModel(model_name)
-            resp = m.generate_content(full_prompt, stream=True, request_options={"timeout": 35})
+            resp = m.generate_content(full_prompt, stream=True, request_options={"timeout": 14})
             raw_accumulated = ""
+            last_render_time = 0
             
             for chunk in resp:
                 if not chunk.text: continue
                 raw_accumulated += chunk.text
+                
+                now_t = time.time()
+                # Throttle Streamlit UI updates to at most ~12 fps (every 80ms) to prevent WebSocket saturation
+                if (now_t - last_render_time) < 0.08:
+                    continue
+                last_render_time = now_t
                 
                 thinking_text, main_text = parse_thought_and_content(raw_accumulated)
                 
@@ -2161,24 +2167,17 @@ def stream_ai_transparent(api_key, prompt, ph):
 """, unsafe_allow_html=True)
                 else:
                     ph.markdown(f"""
-<div class="thinking-live-box" style="border-color:rgba(74, 222, 128, 0.35); opacity:0.85;">
+<div class="thinking-live-box" style="border-color:rgba(74, 222, 128, 0.35); opacity:0.9; margin-bottom:12px;">
   <div class="thinking-live-header">
     <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;color:#4ade80;font-weight:700;">
       <span>✓</span>
       🧠 PENALARAN AI SELESAI ({len(thinking_text.split())} KATA)
     </div>
-    <span style="font-size:0.72rem;color:#4ade80;">Menulis respons...</span>
+    <span style="font-size:0.72rem;color:#4ade80;">Menyusun Catatan Master...</span>
   </div>
-  <details style="font-size:0.78rem;color:#94a3b8;cursor:pointer;">
-    <summary style="outline:none;">Lihat jejak pikiran AI</summary>
-    <div class="thinking-live-text" style="margin-top:6px;max-height:160px;overflow-y:auto;color:#a5b4fc;">{html.escape(thinking_text)}</div>
-  </details>
 </div>
 
-<div class="stream-wrap">
-  <div class="ai-row"><div class="ai-dot">AI</div><span style="font-size:.75rem;color:#818cf8;font-weight:600;">NeuroStudy Analisis ({model_name})</span></div>
-  {html.escape(main_text)}<span class="cur"></span>
-</div>
+{main_text} ▌
 """, unsafe_allow_html=True)
             
             final_think, final_main = parse_thought_and_content(raw_accumulated)
@@ -2196,7 +2195,7 @@ def stream_ai_transparent(api_key, prompt, ph):
   </div>
 </div>
 """
-            ph.markdown(f'{thought_accordion}<div class="msg-ai"><div class="ai-row"><div class="ai-dot">AI</div><span style="font-size:.75rem;color:#818cf8;font-weight:600;">NeuroStudy Analisis</span></div>\n\n{final_main}\n</div>', unsafe_allow_html=True)
+            ph.markdown(f'{thought_accordion}\n\n{final_main}', unsafe_allow_html=True)
             return final_main
         except Exception as e:
             err_str = str(e)
