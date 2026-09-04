@@ -53,6 +53,18 @@ def list_modules(
     limit: int = Query(50, ge=1, le=250),
     offset: int = Query(0, ge=0)
 ):
+    # Unwrap Query parameter defaults if called directly in Python
+    if hasattr(blok, "default"):
+        blok = blok.default
+    if hasattr(search, "default"):
+        search = search.default
+    if hasattr(limit, "default"):
+        limit = limit.default
+    if hasattr(offset, "default"):
+        offset = offset.default
+    limit = int(limit) if limit is not None else 50
+    offset = int(offset) if offset is not None else 0
+
     conn = get_connection()
     query = "SELECT id, title, blok, slide_count, text_length, has_visuals FROM modules WHERE 1=1"
     params = []

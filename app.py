@@ -30,18 +30,24 @@ def load_config():
 def save_config(cfg_dict):
     CONFIG_FILE.write_text(json.dumps(cfg_dict, ensure_ascii=False, indent=2))
 
+def _safe_get_secret(key: str, default: str = "") -> str:
+    try:
+        if hasattr(st, "secrets"):
+            val = st.secrets.get(key)
+            if val is not None:
+                return str(val)
+    except Exception:
+        pass
+    return default
+
 def get_gemini_api_key():
     saved_cfg = load_config()
     saved_key = saved_cfg.get("api_key", "").strip()
     if saved_key:
         return saved_key
-    try:
-        if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
-            return st.secrets["GEMINI_API_KEY"]
-        elif hasattr(st, "secrets") and "api_key" in st.secrets:
-            return st.secrets["api_key"]
-    except Exception:
-        pass
+    sec_key = _safe_get_secret("GEMINI_API_KEY") or _safe_get_secret("api_key")
+    if sec_key:
+        return sec_key
     return os.environ.get("GEMINI_API_KEY", "")
 
 # ── THEME STATE (OBSIDIAN NIGHT VS CLINICAL APPLE WHITE) ──────────────────────
@@ -822,15 +828,9 @@ def login_or_register_google_account(email, display_name=None):
     return new_user_data, "OK"
 
 # ── OFFICIAL GOOGLE OAUTH 2.0 & IDENTITY AUTHORIZATION ENGINE ─────────────────
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or (
-    st.secrets.get("GOOGLE_OAUTH_CLIENT_ID") if hasattr(st, "secrets") and "GOOGLE_OAUTH_CLIENT_ID" in st.secrets else "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com"
-)
-GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or (
-    st.secrets.get("GOOGLE_OAUTH_CLIENT_SECRET") if hasattr(st, "secrets") and "GOOGLE_OAUTH_CLIENT_SECRET" in st.secrets else "d-FL95Q19q7MQmFpd7hHD0Ty"
-)
-GOOGLE_OAUTH_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH_REDIRECT_URI") or (
-    st.secrets.get("GOOGLE_OAUTH_REDIRECT_URI") if hasattr(st, "secrets") and "GOOGLE_OAUTH_REDIRECT_URI" in st.secrets else "http://localhost:8501"
-)
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or _safe_get_secret("GOOGLE_OAUTH_CLIENT_ID", "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com")
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or _safe_get_secret("GOOGLE_OAUTH_CLIENT_SECRET", "d-FL95Q19q7MQmFpd7hHD0Ty")
+GOOGLE_OAUTH_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH_REDIRECT_URI") or _safe_get_secret("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8501")
 
 def get_official_google_auth_url():
     """Menghasilkan URL otorisasi resmi Google OAuth 2.0."""
