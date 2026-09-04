@@ -1729,21 +1729,36 @@ def save_discussion(mat_name, messages):
     d_path = get_user_root() / "discussions" / f"{mat_name}.json"
     d_path.write_text(json.dumps(messages, ensure_ascii=False, indent=2))
 
-def get_current_indonesia_time():
-    """Mengembalikan hari, tanggal, bulan, tahun, dan jam dalam format standar Indonesia."""
+def get_current_indonesia_time(tz_name=None):
+    """Mengembalikan hari, tanggal, bulan, tahun, dan jam dalam zona waktu Indonesia (WIB, WITA, WIT).
+    Secara eksplisit menghitung offset UTC sehingga akurat di server lokal maupun cloud (Streamlit Cloud)."""
     HARI_INA = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
     BULAN_INA = [
         "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
         "Juli", "Agustus", "September", "Oktober", "November", "Desember"
     ]
-    now_live = datetime.datetime.now()
+    if tz_name is None:
+        try:
+            tz_name = st.session_state.get("selected_tz", "WIB")
+        except:
+            tz_name = "WIB"
+
+    tz_offsets = {
+        "WIB": (datetime.timezone(datetime.timedelta(hours=7)), "Asia/Jakarta", "Waktu Indonesia Barat (UTC+7)"),
+        "WITA": (datetime.timezone(datetime.timedelta(hours=8)), "Asia/Makassar", "Waktu Indonesia Tengah (UTC+8)"),
+        "WIT": (datetime.timezone(datetime.timedelta(hours=9)), "Asia/Jayapura", "Waktu Indonesia Timur (UTC+9)")
+    }
+    tz_info = tz_offsets.get(tz_name, tz_offsets["WIB"])
+    tz_obj = tz_info[0]
+
+    now_live = datetime.datetime.now(tz_obj)
     hari = HARI_INA[now_live.weekday()]
     tgl = now_live.day
     bulan = BULAN_INA[now_live.month]
     tahun = now_live.year
-    jam = now_live.strftime("%H:%M") + " WIB"
+    jam = now_live.strftime("%H:%M") + f" {tz_name}"
     full_str = f"{hari}, {tgl} {bulan} {tahun} • {jam}"
-    short_str = f"{hari}, {tgl} {bulan[:3]} {tahun} • {jam}"
+    short_str = f"{jam} • {tgl} {bulan[:3]}"
     return {
         "datetime": now_live,
         "hari": hari,
@@ -1752,17 +1767,21 @@ def get_current_indonesia_time():
         "tahun": tahun,
         "jam": jam,
         "full_str": full_str,
-        "short_str": short_str
+        "short_str": short_str,
+        "tz_name": tz_name,
+        "tz_iana": tz_info[1],
+        "tz_desc": tz_info[2]
     }
 
-def build_gcal_url(title, dt, details=""):
+def build_gcal_url(title, dt, details="", tz_iana="Asia/Jakarta"):
     import urllib.parse
-    start_str = dt.strftime("%Y%m%dT090000Z")
-    end_str = (dt + datetime.timedelta(hours=1)).strftime("%Y%m%dT100000Z")
+    start_str = dt.strftime("%Y%m%dT090000")
+    end_str = (dt + datetime.timedelta(hours=1)).strftime("%Y%m%dT100000")
     params = {
         "action": "TEMPLATE",
         "text": title,
         "dates": f"{start_str}/{end_str}",
+        "ctz": tz_iana,
         "details": details
     }
     return "https://calendar.google.com/calendar/render?" + urllib.parse.urlencode(params)
@@ -2940,7 +2959,7 @@ is_owner = bool(
 )
 st.session_state.is_owner = is_owner
 
-c_brand, c_gtime, c_user, c_switch, c_theme, c_logout = st.columns([2.2, 2.8, 2.3, 1.2, 1.2, 0.9], vertical_alignment="center")
+c_brand, c_gtime, c_user, c_switch, c_theme, c_logout = st.columns([2.2, 2.5, 2.5, 1.3, 1.3, 0.9], vertical_alignment="center")
 
 with c_brand:
     st.markdown('''
@@ -2957,6 +2976,19 @@ with c_gtime:
     t_live = get_current_indonesia_time()
     with st.popover(f"🕒 {t_live['short_str']}", use_container_width=True, help="Waktu Sistem & Hub Integrasi Google Workspace"):
         st.markdown("#### 🌐 Google Medical Workspace")
+        
+        c_tz1, c_tz2 = st.columns([1.8, 2.2])
+        with c_tz1:
+            tz_opts = ["WIB", "WITA", "WIT"]
+            cur_tz = st.session_state.get("selected_tz", "WIB")
+            def_idx = tz_opts.index(cur_tz) if cur_tz in tz_opts else 0
+            new_tz = st.selectbox("Zona Waktu:", tz_opts, index=def_idx, key="sb_tz_picker", label_visibility="collapsed")
+            if new_tz != cur_tz:
+                st.session_state.selected_tz = new_tz
+                st.rerun()
+        with c_tz2:
+            st.caption(f"📍 {t_live['tz_desc']}")
+
         st.markdown(f'''
 <div style="background:linear-gradient(135deg, rgba(66,133,244,0.12), rgba(52,168,83,0.12)); border:1px solid rgba(66,133,244,0.3); border-radius:12px; padding:12px 14px; margin-bottom:12px;">
   <div style="font-size:0.7rem; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">WAKTU & KALENDER SISTEM TERINTEGRASI</div>
@@ -3014,7 +3046,7 @@ with c_user:
 ''', unsafe_allow_html=True)
 
 with c_switch:
-    with st.popover("🔄 Switch Akun", use_container_width=True):
+    with st.popover("🔄 Akun", use_container_width=True):
         st.markdown("#### 🔄 Ganti Akun")
         curr_label = f"**{u_disp}** ({u_mail})" if u_mail else f"**{u_disp}**"
         st.caption(f"Akun aktif saat ini: {curr_label}")
@@ -3040,7 +3072,7 @@ with c_switch:
 
 with c_theme:
     is_obsidian = st.session_state.get("app_theme", "obsidian") == "obsidian"
-    theme_label = "☀️ Mode Klinis" if is_obsidian else "🌙 Mode Obsidian"
+    theme_label = "☀️ Terang" if is_obsidian else "🌙 Gelap"
     theme_help = "Beralih ke tampilan terang ramah mata di siang hari" if is_obsidian else "Beralih ke tampilan gelap elegan di malam hari"
     if st.button(theme_label, help=theme_help, use_container_width=True, key="btn_theme_toggle"):
         new_th = "clinical_white" if is_obsidian else "obsidian"
@@ -3054,7 +3086,7 @@ with c_theme:
         st.rerun()
 
 with c_logout:
-    if st.button("🚪 Logout", use_container_width=True, key="top_logout_btn"):
+    if st.button("🚪 Keluar", use_container_width=True, key="top_logout_btn"):
         clear_persisted_auth_session()
         st.session_state.current_user = None
         st.session_state.user_info = None
